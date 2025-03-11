@@ -41,12 +41,12 @@ class IterableParquetDataset(IterableDataset):
             
             self.token_buffer.append(self.bos_token_id)
             sample_str = str(self.parquet_ds["text"][self.current_index % self.real_length])
-            tokens = self.tokenizer.encode_plus(sample_str, max_length=self.sequence_length, padding=False, truncation=True)['input_ids']
+            tokens = self.tokenizer.encode_plus(sample_str, max_length=self.sequence_length+1, padding=False, truncation=True)['input_ids']
             self.token_buffer.extend(tokens)
             self.current_index += 1
         
-        this_sequence = self.token_buffer[:self.sequence_length]
-        self.token_buffer = self.token_buffer[self.sequence_length:]
+        this_sequence = self.token_buffer[:self.sequence_length+1]
+        self.token_buffer = self.token_buffer[self.sequence_length+1:]
 
         inputs = torch.LongTensor(this_sequence[:-1]).clone()
         labels = torch.LongTensor(this_sequence[1:])
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("unsloth/Mistral-Nemo-Base-2407-bnb-4bit")
     
     # Step 4: Test the IterableParquetDataset
-    dataset = IterableParquetDataset(parquet_file, tokenizer, sequence_length=10)
+    dataset = IterableParquetDataset(parquet_file, tokenizer, sequence_length=20)
     # dataloader = DataLoader(dataset, batch_size=2, num_workers=0)
 
     # Fetch and print the first batch
