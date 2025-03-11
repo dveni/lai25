@@ -20,7 +20,7 @@ ASSIGNMENT_DIR="/iopsstor/scratch/cscs/$USER/assignment-2"
 
 CMD_PREFIX="numactl --membind=0-3"
 
-TRAINING_CMD="python3 $ASSIGNMENT_DIR/train.py \
+TRAINING_CMD="uv run $ASSIGNMENT_DIR/train.py \
     --sequence-length 2048 \
     --batch-size 1 \
     --learning-rate 5e-5 \
