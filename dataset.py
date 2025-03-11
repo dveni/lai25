@@ -34,7 +34,7 @@ class IterableParquetDataset(IterableDataset):
     def __next__(self):
         # Keep filling a buffer until we have enough tokens for a new sample.
         # Mask the loss for each token following the BoS token using -100 index.
-        if len(self.current_index) >= self.real_length:
+        if self.current_index >= self.real_length:
             raise StopIteration
         
         while len(self.token_buffer) < self.sequence_length:
