@@ -39,7 +39,7 @@ class IterableParquetDataset(IterableDataset):
         
         while len(self.token_buffer) < self.sequence_length:
             
-            self.token_buffer.append(self.bos_token_id)
+            # self.token_buffer.append(self.bos_token_id)
             sample_str = str(self.parquet_ds["text"][self.current_index % self.real_length])
             tokens = self.tokenizer.encode_plus(sample_str, max_length=self.sequence_length+1, padding=False, truncation=True)['input_ids']
             self.token_buffer.extend(tokens)
