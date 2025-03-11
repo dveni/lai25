@@ -114,4 +114,7 @@ if __name__ == "__main__":
         inputs, labels = sample
         print("Inputs:", inputs)
         print("Labels:", labels)
+        decoded  = tokenizer.decode(inputs)
+        print("Decoded:", decoded)
+        print(inputs.shape, labels.shape)
         break  # Only print one batch for verification
