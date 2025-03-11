@@ -1,4 +1,7 @@
 from model import Transformer, TransformerModelArgs
+from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained("unsloth/Mistral-Nemo-Base-2407-bnb-4bit")
 model_config = TransformerModelArgs(
                         dim=4096,
                         n_layers=32,
