@@ -29,9 +29,9 @@ TRAINING_CMD="python3 $ASSIGNMENT_DIR/train.py \
     --learning-rate 5e-5 \
     --lr-warmup-steps 100 \
     --training-steps 1000 \
+    --compile \
+    --fused-optimizer \
     "
-    # --compile \
-    # --fused-optimizer \
 
 srun --cpus-per-task $SLURM_CPUS_PER_TASK bash -c "$CMD_PREFIX $TRAINING_CMD"
 
