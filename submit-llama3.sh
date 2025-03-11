@@ -22,8 +22,8 @@ CMD_PREFIX="numactl --membind=0-3"
 
 # cd $ASSIGNMENT_DIR
 
-TRAINING_CMD="python3 $ASSIGNMENT_DIR/train.py \
 # TRAINING_CMD="uv run train.py \
+TRAINING_CMD="python3 $ASSIGNMENT_DIR/train.py \
     --sequence-length 2048 \
     --batch-size 1 \
     --learning-rate 5e-5 \
