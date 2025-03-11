@@ -107,10 +107,11 @@ if __name__ == "__main__":
     
     # Step 4: Test the IterableParquetDataset
     dataset = IterableParquetDataset(parquet_file, tokenizer, sequence_length=20)
-    # dataloader = DataLoader(dataset, batch_size=2, num_workers=0)
+    dataloader = DataLoader(dataset, batch_size=2, num_workers=0)
 
     # Fetch and print the first batch
-    for sample in dataset:
+    # for sample in dataset:
+    for sample in dataloader:
         inputs, labels = sample
         print("Inputs:", inputs)
         print("Labels:", labels)
