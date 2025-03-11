@@ -34,22 +34,29 @@ class IterableParquetDataset(IterableDataset):
     def __next__(self):
         # Keep filling a buffer until we have enough tokens for a new sample.
         # Mask the loss for each token following the BoS token using -100 index.
+        if len(self.current_index) >= self.real_length:
+            raise StopIteration
+        
         while len(self.token_buffer) < self.sequence_length:
+            
             self.token_buffer.append(self.bos_token_id)
             sample_str = str(self.parquet_ds["text"][self.current_index % self.real_length])
             tokens = self.tokenizer.encode_plus(sample_str, max_length=self.sequence_length, padding=False, truncation=True)['input_ids']
             self.token_buffer.extend(tokens)
             self.current_index += 1
+        
+        this_sequence = self.token_buffer[:self.sequence_length]
+        self.token_buffer = self.token_buffer[self.sequence_length:]
 
-        inputs = torch.LongTensor(self.token_buffer[:-1]).clone()
-        labels = torch.LongTensor(self.token_buffer[1:])
+        inputs = torch.LongTensor(this_sequence[:-1]).clone()
+        labels = torch.LongTensor(this_sequence[1:])
 
         # For padding tokens, mask the loss
         mask = labels == self.bos_token_id
         mask = torch.roll(mask, shifts=1, dims=0)
         labels[mask] = -100    
 
-        yield inputs, labels
+        return inputs, labels
 
 
 @dataclass
@@ -88,21 +95,21 @@ class ParquetDataset(Dataset):
 
 
 if __name__ == "__main__":
-	# Step 1: Create a dummy Parquet file with sample text data
-	# data = pa.Table.from_pydict({"text": ["Hello world!", "This is a test.", "PyArrow is great!", "Transformers are powerful."]})
+    # Step 1: Create a dummy Parquet file with sample text data
+    # data = pa.Table.from_pydict({"text": ["Hello world!", "This is a test.", "PyArrow is great!", "Transformers are powerful."]})
     num_samples = 1000
     texts = [f"Sample text number {i}. This is a randomly generated sentence." for i in range(num_samples)]
     data = pa.Table.from_pydict({"text": texts})
     parquet_file = "dummy.parquet"
     pq.write_table(data, parquet_file)
-	# Step 2: Define a tokenizer
+    # Step 2: Define a tokenizer
     tokenizer = AutoTokenizer.from_pretrained("unsloth/Mistral-Nemo-Base-2407-bnb-4bit")
     
-	# Step 4: Test the IterableParquetDataset
+    # Step 4: Test the IterableParquetDataset
     dataset = IterableParquetDataset(parquet_file, tokenizer, sequence_length=10)
     # dataloader = DataLoader(dataset, batch_size=2, num_workers=0)
 
-	# Fetch and print the first batch
+    # Fetch and print the first batch
     for sample in dataset:
         inputs, labels = sample
         print("Inputs:", inputs)
