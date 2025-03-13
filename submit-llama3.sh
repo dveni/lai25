@@ -31,6 +31,7 @@ TRAINING_CMD="python3 $ASSIGNMENT_DIR/train.py \
     --training-steps 1000 \
     --compile \
     --fused-optimizer \
+    --profile
     "
 
 srun --cpus-per-task $SLURM_CPUS_PER_TASK bash -c "$CMD_PREFIX $TRAINING_CMD"
