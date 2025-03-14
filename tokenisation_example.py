@@ -30,7 +30,7 @@ sample = dataset[0]
 print(sample.keys())
 
 decoded = tokenizer.decode(sample['input_ids'][:200])
-print(decoded[:200])
+print(decoded)
 
 
 # Create collator
