@@ -34,7 +34,7 @@ torchrun \
 --nproc_per_node=4 \
 --master_addr="${MASTER_ADDR}" \
 --master_port="${MASTER_PORT}" \
-/iopsstor/scratch/cscs/$USER/lai25/assignment3c.py
+/iopsstor/scratch/cscs/$USER/lai25/a3/assignment3a.py
 "
 # # run the script
 # python /iopsstor/scratch/cscs/$USER/lai25/a3/assignment3a.py
