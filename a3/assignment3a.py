@@ -13,6 +13,7 @@ dist.init_process_group(backend="nccl")
 torch.cuda.set_device(local_rank)
 N = 1 #2 ** 30 # ~1.1 billion elements
 tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
+print(f"[Python] rank={rank} | tensor={tensor}")
 
 # Warmup
 print(f"[Python] rank={rank} | Starting warmup")
