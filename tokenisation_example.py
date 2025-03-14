@@ -18,7 +18,7 @@ print(f"Decoded text: {decoded_text}")
 dataset_path = "/capstor/store/cscs/ethz/large-sc/datasets/train_data.parquet"
 sequence_length = 4096
 # Create dataset (only requesting 1 sample)
-dataset = IterableParquetDataset(
+dataset = ParquetDataset(
 parquet_file=dataset_path,
 tokenizer=tokenizer,
 sequence_length=sequence_length,
@@ -29,7 +29,7 @@ sample = dataset[0]
 
 print(sample.keys())
 
-decoded = tokenizer.decode(sample['input_ids'])
+decoded = tokenizer.decode(sample['input_ids'][:200])
 print(decoded[:200])
 
 
