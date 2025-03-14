@@ -11,7 +11,7 @@ world_size = int(os.environ["WORLD_SIZE"])
 dist.init_process_group(backend="nccl")
 # Limit GPU allocation of this process to only one GPU
 torch.cuda.set_device(local_rank)
-N = 2 ** 30 # ~1.1 billion elements
+N = 10 #2 ** 30 # ~1.1 billion elements
 tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
 
 # Warmup
