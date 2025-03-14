@@ -28,7 +28,7 @@ CMD="
 # print current environment variables
 echo \"[srun] rank=\$SLURM_PROCID host=\$(hostname) noderank=\$SLURM_NODEID localrank=\$SLURM_LOCALID wrong_host=$(hostname)\"
 # run the script
-python /iopsstor/scratch/cscs/$USER/large-scale-ai-eng-course/assignment3a.py
+python /iopsstor/scratch/cscs/$USER/lai25/a3/assignment3a.py
 "
 # Submits the CMD to all the processes on all the nodes.
 srun bash -c "$CMD"
