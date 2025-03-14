@@ -8,7 +8,7 @@
 #SBATCH --time=00:03:00
 #SBATCH --output=output_3a_%j.log
 #SBATCH --error=output_3a_%j.err
-#SBATCH --environment=my_env
+#SBATCH --environment=myenv
 # Stop the script if a command fails or if an undefined variable is used
 set -eo pipefail
 # The sbatch script is executed by only one node.
