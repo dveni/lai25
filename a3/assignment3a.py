@@ -15,9 +15,10 @@ N = 2 ** 30 # ~1.1 billion elements
 tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
 
 # Warmup
+print(f"[Python] rank={rank} | Starting warmup")
 for _ in range(5):
     dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
-
+print(f"[Python] rank={rank} | Warmup complete")
 
 # Force a CUDA synchronization point before measuring time
 torch.cuda.synchronize()
@@ -43,7 +44,7 @@ throughput = total_gbs / elapsed_seconds # GB/s
 print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s")
 
 
-async_op = dist.all_reduce(tensor, op=dist.ReduceOp.SUM, async_op=True)
-while not async_op.is_completed():
-    print(f"{rank}|", end='', flush=True) # Print the rank number without a newline to simulate CPU work
-    time.sleep(0.1) # Wait for 0.1 seconds
+# async_op = dist.all_reduce(tensor, op=dist.ReduceOp.SUM, async_op=True)
+# while not async_op.is_completed():
+#     print(f"{rank}|", end='', flush=True) # Print the rank number without a newline to simulate CPU work
+#     time.sleep(0.1) # Wait for 0.1 seconds
