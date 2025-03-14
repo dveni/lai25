@@ -32,6 +32,7 @@ end = time.time()
 elapsed_seconds = end - start
 
 expected_val = world_size*(world_size-1)/2
+print(f"{tensor.shape=}")
 assert torch.allclose(
 tensor,
 torch.full_like(tensor, expected_val)
