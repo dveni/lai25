@@ -3,7 +3,7 @@
 #SBATCH --account=a-large-sc
 #SBATCH --partition=normal
 #SBATCH --nodes=4
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
 #SBATCH --time=00:03:00
 #SBATCH --output=output_3a_%j.log
@@ -28,8 +28,17 @@ CMD="
 # print current environment variables
 echo \"[srun] rank=\$SLURM_PROCID host=\$(hostname) noderank=\$SLURM_NODEID localrank=\$SLURM_LOCALID wrong_host=$(hostname)\"
 # run the script
-python /iopsstor/scratch/cscs/$USER/lai25/a3/assignment3a.py
+torchrun \
+--nnodes="${SLURM_NNODES}" \
+--node_rank=\$SLURM_NODEID \
+--nproc_per_node=4 \
+--master_addr="${MASTER_ADDR}" \
+--master_port="${MASTER_PORT}" \
+/iopsstor/scratch/cscs/$USER/lai25/assignment3c.py
 "
+# # run the script
+# python /iopsstor/scratch/cscs/$USER/lai25/a3/assignment3a.py
+
 # Submits the CMD to all the processes on all the nodes.
 srun bash -c "$CMD"
 echo "[sbatch-master] task finished"
