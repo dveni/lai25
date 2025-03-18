@@ -28,16 +28,17 @@ print(f"[Python] rank={rank} | Starting warmup")
 for _ in range(5):
     dist.reduce(gradients, dst=ROOT_RANK, op=dist.ReduceOp.AVG)
 print(f"[Python] rank={rank} | Warmup complete")
+gradients = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
 
 
 # Force a CUDA synchronization point before measuring time
 torch.cuda.synchronize()
 # Record the start time
 start = time.time()
-dist.reduce(gradients, dst=ROOT_RANK, op=dist.ReduceOp.SUM)
+dist.reduce(gradients, dst=ROOT_RANK, op=dist.ReduceOp.AVG)
 # On root rank, compute the average gradient and update parameters
 if rank == ROOT_RANK:
-    gradients /= world_size # Average the gradients
+    # gradients /= world_size # Average the gradients
     parameters -= LEARNING_RATE * gradients # SGD update
 
 # Broadcast updated parameters to all ranks
