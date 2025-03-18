@@ -16,10 +16,10 @@ tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
 print(f"[Python] rank={rank} | tensor={tensor}")
 
 # Warmup
-# print(f"[Python] rank={rank} | Starting warmup")
-# for _ in range(5):
-#     dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
-# print(f"[Python] rank={rank} | Warmup complete")
+print(f"[Python] rank={rank} | Starting warmup")
+for _ in range(5):
+    dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
+print(f"[Python] rank={rank} | Warmup complete")
 
 N = 2 ** 30 # ~1.1 billion elements
 tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
@@ -55,3 +55,7 @@ async_op = dist.all_reduce(tensor, op=dist.ReduceOp.SUM, async_op=True)
 while not async_op.is_completed():
     print(f"{rank}|", end='', flush=True) # Print the rank number without a newline to simulate CPU work
     time.sleep(0.1) # Wait for 0.1 seconds
+
+res = async_op.result()
+print(f"[Python] rank={rank} | async all-reduce complete")
+print(f"[Python] rank={rank} | res={res}")
