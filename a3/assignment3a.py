@@ -11,7 +11,7 @@ world_size = int(os.environ["WORLD_SIZE"])
 dist.init_process_group(backend="nccl")
 # Limit GPU allocation of this process to only one GPU
 torch.cuda.set_device(local_rank)
-N = 1 #2 ** 30 # ~1.1 billion elements
+N = 2 ** 30 # ~1.1 billion elements
 tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
 print(f"[Python] rank={rank} | tensor={tensor}")
 
@@ -21,7 +21,7 @@ for _ in range(5):
     dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
 print(f"[Python] rank={rank} | Warmup complete")
 
-N = 1 #2 ** 30 # ~1.1 billion elements
+N = 2 ** 30 # ~1.1 billion elements
 tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
 
 # Force a CUDA synchronization point before measuring time
@@ -36,9 +36,9 @@ end = time.time()
 elapsed_seconds = end - start
 
 expected_val = world_size*(world_size-1)/2
-print(f"{tensor.shape=}")
-print(f"{tensor[0]=}")
-print(f"{tensor[1]=}")
+# print(f"{tensor.shape=}")
+# print(f"{tensor[0]=}")
+# print(f"{tensor[1]=}")
 assert torch.allclose(
 tensor,
 torch.full_like(tensor, expected_val)
@@ -51,7 +51,7 @@ throughput = total_gbs / elapsed_seconds # GB/s
 print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s")
 
 
-# async_op = dist.all_reduce(tensor, op=dist.ReduceOp.SUM, async_op=True)
-# while not async_op.is_completed():
-#     print(f"{rank}|", end='', flush=True) # Print the rank number without a newline to simulate CPU work
-#     time.sleep(0.1) # Wait for 0.1 seconds
+async_op = dist.all_reduce(tensor, op=dist.ReduceOp.SUM, async_op=True)
+while not async_op.is_completed():
+    print(f"{rank}|", end='', flush=True) # Print the rank number without a newline to simulate CPU work
+    time.sleep(0.1) # Wait for 0.1 seconds
