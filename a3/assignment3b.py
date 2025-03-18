@@ -34,10 +34,10 @@ print(f"[Python] rank={rank} | Warmup complete")
 torch.cuda.synchronize()
 # Record the start time
 start = time.time()
-dist.reduce(gradients, dst=ROOT_RANK, op=dist.ReduceOp.AVG)
+dist.reduce(gradients, dst=ROOT_RANK, op=dist.ReduceOp.SUM)
 # On root rank, compute the average gradient and update parameters
 if rank == ROOT_RANK:
-    # gradients /= world_size # Average the gradients
+    gradients /= world_size # Average the gradients
     parameters -= LEARNING_RATE * gradients # SGD update
 
 # Broadcast updated parameters to all ranks
