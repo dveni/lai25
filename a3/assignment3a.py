@@ -16,10 +16,10 @@ tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
 print(f"[Python] rank={rank} | tensor={tensor}")
 
 # Warmup
-print(f"[Python] rank={rank} | Starting warmup")
-for _ in range(5):
-    dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
-print(f"[Python] rank={rank} | Warmup complete")
+# print(f"[Python] rank={rank} | Starting warmup")
+# for _ in range(5):
+#     dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
+# print(f"[Python] rank={rank} | Warmup complete")
 
 N = 2 ** 30 # ~1.1 billion elements
 tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
