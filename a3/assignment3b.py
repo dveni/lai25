@@ -23,6 +23,13 @@ print(f"[Python] rank={rank} | Initial parameters[0]={parameters[0].item()}")
 LEARNING_RATE = 0.1
 ROOT_RANK = 0 # Central rank for parameter updates
 
+# Warmup
+print(f"[Python] rank={rank} | Starting warmup")
+for _ in range(5):
+    dist.reduce(gradients, dst=ROOT_RANK, op=dist.ReduceOp.AVG)
+print(f"[Python] rank={rank} | Warmup complete")
+
+
 # Force a CUDA synchronization point before measuring time
 torch.cuda.synchronize()
 # Record the start time
