@@ -6,8 +6,8 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
 #SBATCH --time=00:03:00
-#SBATCH --output=output_3ring_%j.log
-#SBATCH --error=output_3ring_%j.err
+#SBATCH --output=output_3c_%j.log
+#SBATCH --error=output_3c_%j.err
 #SBATCH --environment=myenv
 # Stop the script if a command fails or if an undefined variable is used
 set -eo pipefail
@@ -34,7 +34,7 @@ torchrun \
 --nproc_per_node=4 \
 --master_addr="${MASTER_ADDR}" \
 --master_port="${MASTER_PORT}" \
-/iopsstor/scratch/cscs/$USER/lai25/a3/assignment3b.py
+/iopsstor/scratch/cscs/$USER/lai25/a3/assignment3c.py
 "
 # # run the script
 # python /iopsstor/scratch/cscs/$USER/lai25/a3/assignment3a.py
