@@ -58,6 +58,7 @@ total_gbs = total_bytes / (1024**3) # convert to GB
 throughput = total_gbs / elapsed_seconds # GB/s
 print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}")
 print("-------------------------------------------------")
+del tensor
 print(" Unnatural groups\n")
 
 # More unnatural group
