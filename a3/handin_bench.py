@@ -12,48 +12,54 @@ world_size = int(os.environ["WORLD_SIZE"])
 # Initializes the default (global) process group
 dist.init_process_group(backend="nccl")
 
-# Define send and receive ranks
-send_rank = (rank + 1) % world_size
-recv_rank = (rank - 1 + world_size) % world_size
+ordered_node_groups = [
+    dist.new_group([0,1,2,3]),
+    dist.new_group([4,5,6,7]),
+    dist.new_group([8,9,10,11]),
+    dist.new_group([12,13,14,15]),
+]
+
+unordered_node_groups = [
+    dist.new_group([0,4,8,12]),
+    dist.new_group([1,5,9,13]),
+    dist.new_group([2,6,10,14]),
+    dist.new_group([3,7,11,15]),
+]
+
 
 # Limit GPU allocation of this process to only one GPU
 torch.cuda.set_device(local_rank)
-N = 2 ** 30 # ~1.1 billion elements
 
+N = 2 ** 30 # ~1.1 billion elements
 tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
 print(f"[Python] rank={rank} | tensor={tensor}")
-
 # Warmup
 print(f"[Python] rank={rank} | Starting warmup")
 for _ in range(5):
     dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
 print(f"[Python] rank={rank} | Warmup complete")
 
-# Create a tensor to send: filled with the sender's rank
-send_tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
-# Prepare a tensor to receive data
-recv_tensor = torch.zeros(N, dtype=torch.float32, device="cuda")
+
+# Total parameters size remains the same but splits across ranks
+N = 2 ** 30 # ~1.1 billion elements
+# Each process starts with data of its rank
+tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
+
+
 
 # Synchronize before starting communication
 dist.barrier()
-# Start send and receive
 send_start = time.time()
-send_req = dist.isend(tensor=send_tensor, dst=send_rank)
-recv_req = dist.irecv(tensor=recv_tensor, src=recv_rank)
-# Wait for both send and receive to complete
-send_req.wait()
-recv_req.wait()
-
-print(f"[Python] rank={rank} is_complete={send_req.is_completed()}", flush=True)
-print(f"[Python] rank={rank} is_complete={recv_req.is_completed()}", flush=True)
+# Executes the reduce op on the group to which this process belongs.
+dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=node_groups[rank // 4])
+# More unnatural group
+# dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=node_groups[rank % 4])
 torch.cuda.synchronize() # shouldn't be needed but .wait() is not behaving as expected.
 
 send_end = time.time()
 elapsed_seconds = send_end - send_start
-
-
-
-total_bytes = recv_tensor.nelement() * 4 # convert elements to bytes
+total_bytes = tensor.nelement() * 4 # convert elements to bytes
 total_gbs = total_bytes / (1024**3) # convert to GB
 throughput = total_gbs / elapsed_seconds # GB/s
-print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s")
+print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}")
+print("-------------------------------------------------")
