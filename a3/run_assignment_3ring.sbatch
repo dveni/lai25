@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=LSAIE_a3
 #SBATCH --account=a-large-sc
-#SBATCH --partition=debug
+#SBATCH --partition=normal
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
