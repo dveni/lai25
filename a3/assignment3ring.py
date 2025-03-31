@@ -38,9 +38,12 @@ recv_tensor = torch.zeros(N, dtype=torch.float32, device="cuda")
 dist.barrier()
 # Start send and receive
 send_start = time.time()
+print(f"[Python] rank={rank} | Sending data to rank={send_rank}")
 send_req = dist.isend(tensor=send_tensor, dst=send_rank)
+print(f"[Python] rank={rank} | Receiving data from rank={recv_rank}")
 recv_req = dist.irecv(tensor=recv_tensor, src=recv_rank)
 # Wait for both send and receive to complete
+print(f"[Python] rank={rank} | Waiting for send_req and recv_req to complete")
 send_req.wait()
 recv_req.wait()
 
