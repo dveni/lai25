@@ -66,7 +66,7 @@ recv_tensor = torch.zeros((N,), dtype=torch.float32, device=device)
 dist.barrier()
 send_start = time.time()
 
-dist.reduce_scatter(tensor=recv_tensor, tensor_list=[send_tensor[i*N:(i+1)*N] for i in range(world_size)], op=dist.ReduceOp.SUM)
+dist.reduce_scatter(output=recv_tensor, input_list=[send_tensor[i*N:(i+1)*N] for i in range(world_size)], op=dist.ReduceOp.SUM)
 torch.cuda.synchronize() # shouldn't be needed but .wait() is not behaving as expected.
 
 send_end = time.time()
