@@ -77,4 +77,28 @@ throughput = total_gbs / elapsed_seconds # GB/s
 print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s")
 
 print(f"[Python ReduceScatter] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | recv_tensor.mean()={recv_tensor.mean()}")
+print("-------------------------------------------------")
+print("REDUCE SCATTER\n")
+# Reduce scatter
+device="cuda"
+# Each process starts with the full dataset
+send_tensor = torch.full((world_size * N,), fill_value=rank, dtype=torch.float32, device=device)
+# And we create a tensor to hold 1/world_size part of it.
+recv_tensor = torch.zeros((N,), dtype=torch.float32, device=device)
+
+# Synchronize before starting communication
+dist.barrier()
+send_start = time.time()
+
+dist.reduce_scatter(output=recv_tensor, input_list=[send_tensor[i*N:(i+1)*N] for i in range(world_size)], op=dist.ReduceOp.SUM)
+torch.cuda.synchronize() # shouldn't be needed but .wait() is not behaving as expected.
+
+send_end = time.time()
+elapsed_seconds = send_end - send_start
+total_bytes = recv_tensor.nelement() * 4 # convert elements to bytes
+total_gbs = total_bytes / (1024**3) # convert to GB
+throughput = total_gbs / elapsed_seconds # GB/s
+print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s")
+
+print(f"[Python ReduceScatter] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | recv_tensor.mean()={recv_tensor.mean()}")
 
