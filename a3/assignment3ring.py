@@ -44,6 +44,11 @@ recv_req = dist.irecv(tensor=recv_tensor, src=recv_rank)
 # Wait for both send and receive to complete
 send_req.wait()
 recv_req.wait()
+
+print(f"[Python] rank={rank} is_complete={send_req.is_completed()}", flush=True)
+print(f"[Python] rank={rank} is_complete={recv_req.is_completed()}", flush=True)
+torch.cuda.synchronize() # shouldn't be needed but .wait() is not behaving as expected.
+
 send_end = time.time()
 elapsed_seconds = send_end - send_start
 
