@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import os
+from pprint import pprint
 import time
 import torch
 import torch.distributed as dist
+import matplotlib.pyplot as plt
 
 # Read environment variables set by torchrun
 rank = int(os.environ["RANK"])
@@ -30,6 +32,7 @@ unordered_node_groups = [
 # Limit GPU allocation of this process to only one GPU
 torch.cuda.set_device(local_rank)
 
+# Warmup
 N = 2 ** 30 # ~1.1 billion elements
 tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
 print(f"[Python] rank={rank} | tensor={tensor}")
@@ -40,26 +43,94 @@ for _ in range(5):
 print(f"[Python] rank={rank} | Warmup complete")
 
 
-# Total parameters size remains the same but splits across ranks
-N = 2 ** 30 # ~1.1 billion elements
-# Each process starts with data of its rank
-tensor = torch.full((N,), fill_value=rank, dtype=torch.float32, device="cuda")
+
+results = {
+    "ordered": {},
+    "unordered": {},
+    "global": {}
+}
+for N in torch.logspace(10, 32, 9):
+    
+    ### GLOBAL GROUP
+    print(f"GLOBAL GROUP: {N}")
+    # Each process starts with data of its rank
+    tensor = torch.full((int(N),), fill_value=rank, dtype=torch.float32, device="cuda")
+    # Synchronize before starting communication
+    dist.barrier()
+    send_start = time.time()
+    # Executes the reduce op on the group to which this process belongs.
+    dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
+    # More unnatural group
+    # dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=node_groups[rank % 4])
+    torch.cuda.synchronize() # shouldn't be needed but .wait() is not behaving as expected.
+
+    send_end = time.time()
+    elapsed_seconds = send_end - send_start
+    total_bytes = tensor.nelement() * 4 # convert elements to bytes
+    total_gbs = total_bytes / (1024**3) # convert to GB
+    throughput = total_gbs / elapsed_seconds # GB/s
+    print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}")
+    results["global"][N] = throughput
+    print("-------------------------------------------------")
 
 
 
-# Synchronize before starting communication
-dist.barrier()
-send_start = time.time()
-# Executes the reduce op on the group to which this process belongs.
-dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=node_groups[rank // 4])
-# More unnatural group
-# dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=node_groups[rank % 4])
-torch.cuda.synchronize() # shouldn't be needed but .wait() is not behaving as expected.
+    ### ORDERED GROUP
+    print(f"ORDERED GROUP: {N}")
+    # Each process starts with data of its rank
+    tensor = torch.full((int(N),), fill_value=rank, dtype=torch.float32, device="cuda")
+    # Synchronize before starting communication
+    dist.barrier()
+    send_start = time.time()
+    # Executes the reduce op on the group to which this process belongs.
+    dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=ordered_node_groups[rank // 4])
+    # More unnatural group
+    # dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=node_groups[rank % 4])
+    torch.cuda.synchronize() # shouldn't be needed but .wait() is not behaving as expected.
 
-send_end = time.time()
-elapsed_seconds = send_end - send_start
-total_bytes = tensor.nelement() * 4 # convert elements to bytes
-total_gbs = total_bytes / (1024**3) # convert to GB
-throughput = total_gbs / elapsed_seconds # GB/s
-print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}")
-print("-------------------------------------------------")
+    send_end = time.time()
+    elapsed_seconds = send_end - send_start
+    total_bytes = tensor.nelement() * 4 # convert elements to bytes
+    total_gbs = total_bytes / (1024**3) # convert to GB
+    throughput = total_gbs / elapsed_seconds # GB/s
+    print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}")
+    results["ordered"][N] = throughput
+    print("-------------------------------------------------")
+
+
+    ### UNORDERED GROUP
+    print(f"UNORDERED GROUP: {N}")
+    # Each process starts with data of its rank
+    tensor = torch.full((int(N),), fill_value=rank, dtype=torch.float32, device="cuda")
+    # Synchronize before starting communication
+    dist.barrier()
+    send_start = time.time()
+    # Executes the reduce op on the group to which this process belongs.
+    dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=unordered_node_groups[rank % 4])
+    torch.cuda.synchronize() # shouldn't be needed but .wait() is not behaving as expected.
+
+    send_end = time.time()
+    elapsed_seconds = send_end - send_start
+    total_bytes = tensor.nelement() * 4 # convert elements to bytes
+    total_gbs = total_bytes / (1024**3) # convert to GB
+    throughput = total_gbs / elapsed_seconds # GB/s
+    print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}")
+    results["unordered"][N] = throughput
+    print("-------------------------------------------------")
+
+pprint(results)
+# Save results
+torch.save(results, "benchmark_results.pth")
+
+# Plot results
+plt.figure()
+plt.plot(list(results["global"].keys()), list(results["global"].values()), label="Global")
+plt.plot(list(results["ordered"].keys()), list(results["ordered"].values()), label="Ordered")
+plt.plot(list(results["unordered"].keys()), list(results["unordered"].values()), label="Unordered")
+plt.xscale("log")
+plt.yscale("log")
+plt.xlabel("Number of elements")
+plt.ylabel("Throughput (GB/s)")
+plt.legend()
+plt.savefig("benchmark_results.png")
+plt.close()
