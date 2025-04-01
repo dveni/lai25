@@ -49,7 +49,7 @@ results = {
     "unordered": {},
     "global": {}
 }
-for N in torch.logspace(10, 32, 9):
+for N in torch.logspace(10, 32, 9, base=2):
     
     ### GLOBAL GROUP
     # print(f"GLOBAL GROUP: {N}")
