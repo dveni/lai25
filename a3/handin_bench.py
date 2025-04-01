@@ -52,7 +52,7 @@ results = {
 for N in torch.logspace(10, 32, 9):
     
     ### GLOBAL GROUP
-    print(f"GLOBAL GROUP: {N}")
+    # print(f"GLOBAL GROUP: {N}")
     # Each process starts with data of its rank
     tensor = torch.full((int(N),), fill_value=rank, dtype=torch.float32, device="cuda")
     # Synchronize before starting communication
@@ -69,14 +69,15 @@ for N in torch.logspace(10, 32, 9):
     total_bytes = tensor.nelement() * 4 # convert elements to bytes
     total_gbs = total_bytes / (1024**3) # convert to GB
     throughput = total_gbs / elapsed_seconds # GB/s
-    print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}")
+    print(f"GLOBAL GROUP {N} | [Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}\n")
     results["global"][N] = throughput
-    print("-------------------------------------------------")
+    del tensor
+    # print("-------------------------------------------------")
 
 
 
     ### ORDERED GROUP
-    print(f"ORDERED GROUP: {N}")
+    # print(f"ORDERED GROUP: {N}")
     # Each process starts with data of its rank
     tensor = torch.full((int(N),), fill_value=rank, dtype=torch.float32, device="cuda")
     # Synchronize before starting communication
@@ -93,13 +94,14 @@ for N in torch.logspace(10, 32, 9):
     total_bytes = tensor.nelement() * 4 # convert elements to bytes
     total_gbs = total_bytes / (1024**3) # convert to GB
     throughput = total_gbs / elapsed_seconds # GB/s
-    print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}")
+    print(f"ORDERED GROUP: {N} | [Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}\n")
     results["ordered"][N] = throughput
-    print("-------------------------------------------------")
+    del tensor
+    # print("-------------------------------------------------")
 
 
     ### UNORDERED GROUP
-    print(f"UNORDERED GROUP: {N}")
+    # print(f"UNORDERED GROUP: {N}")
     # Each process starts with data of its rank
     tensor = torch.full((int(N),), fill_value=rank, dtype=torch.float32, device="cuda")
     # Synchronize before starting communication
@@ -114,13 +116,15 @@ for N in torch.logspace(10, 32, 9):
     total_bytes = tensor.nelement() * 4 # convert elements to bytes
     total_gbs = total_bytes / (1024**3) # convert to GB
     throughput = total_gbs / elapsed_seconds # GB/s
-    print(f"[Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}")
+    print(f"UNORDERED GROUP: {N} | [Python] rank={rank} | transferred {total_gbs:.2}GB | throughput={throughput:.4}GB/s | tensor.mean()={tensor.mean()}\n")
     results["unordered"][N] = throughput
-    print("-------------------------------------------------")
+    del tensor
+    # print("-------------------------------------------------")
 
+print("Done!")
 pprint(results)
 # Save results
-torch.save(results, "benchmark_results.pth")
+torch.save(results, f"benchmark_results_{rank}.pth")
 
 # Plot results
 plt.figure()
@@ -132,5 +136,5 @@ plt.yscale("log")
 plt.xlabel("Number of elements")
 plt.ylabel("Throughput (GB/s)")
 plt.legend()
-plt.savefig("benchmark_results.png")
+plt.savefig(f"benchmark_results_{rank}.png")
 plt.close()
