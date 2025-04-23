@@ -172,9 +172,11 @@ def data_parallel_single_step(seed=42, device="cuda") -> torch.Tensor:
     # Compute gradients (backward pass)
     local_loss.backward()
 
-    print(f"[Rank {rank}] Gradient before all_reduce: {model.W.grad}")
+    # print(f"[Rank {rank}] Gradient before all_reduce: {model.W.grad}")
     # Synchronize gradients across all processes
     for param in model.parameters():
+        print(f"[Rank {rank}] param: {param}")
+        print(f"[Rank {rank}] Gradient before all_reduce: {param.grad}")
         # Sum the gradients across all processes
         dist.all_reduce(param.grad, op=dist.ReduceOp.SUM)
         print(f"[Rank {rank}] Gradient after all_reduce: {param.grad}")
