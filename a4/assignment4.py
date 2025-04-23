@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.distributed as dist
-
+from torch.distributed import ReduceOp
 
 rank, local_rank, world_size = init_distributed()
 
@@ -178,7 +178,7 @@ def data_parallel_single_step(seed=42, device="cuda") -> torch.Tensor:
         print(f"[Rank {rank}] param: {param}")
         print(f"[Rank {rank}] Gradient before all_reduce: {param.grad}")
         # Sum the gradients across all processes
-        dist.all_reduce(param.grad, op=dist.ReduceOp.SUM)
+        dist.all_reduce(param.grad, op=ReduceOp.SUM)
         print(f"[Rank {rank}] Gradient after all_reduce: {param.grad}")
         # Average the gradients by dividing by world_size
         param.grad.div_(world_size) # Good to know: in pytorch func_ are in-place operations.
