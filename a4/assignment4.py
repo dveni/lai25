@@ -83,7 +83,7 @@ else:
     # distribute updated weight to all ranks to enable a comparison with the baseline later on
     dist.broadcast(updated_weight, src=0)
 
-
+dist.barrier()
 # Cleanup
 dist.destroy_process_group()
 print(f"[Rank {rank}] done")
