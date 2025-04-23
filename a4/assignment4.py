@@ -124,8 +124,8 @@ def single_step_with_grad_accumulation(seed=42, device="cuda", accumulation_step
         # Compute gradients (backward pass)
         # The gradients are accumulated (summed) in param.grad
         scaled_loss.backward()
-        # After accumulating gradients from all micro-batches, update parameters
-        optimizer.step()
+    # After accumulating gradients from all micro-batches, update parameters
+    optimizer.step()
     # Return updated weight matrix
     return model.W.detach()
 
@@ -206,7 +206,7 @@ if rank == 0:
     # Compare on all ranks
     compare_tensors(updated_weight.cpu(), data_parallel_weight.cpu(), prefix="DataParallel")
 
-dist.barrier()
+
 # Cleanup
 dist.destroy_process_group()
 print(f"[Rank {rank}] done")
