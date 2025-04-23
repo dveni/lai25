@@ -176,6 +176,7 @@ def data_parallel_single_step(seed=42, device="cuda") -> torch.Tensor:
     for param in model.parameters():
         # Sum the gradients across all processes
         dist.all_reduce(param.grad.data, op=dist.ReduceOp.SUM)
+        print(f"[Rank {rank}] Gradient after all_reduce: {param.grad.data}")
         # Average the gradients by dividing by world_size
         param.grad.div_(world_size) # Good to know: in pytorch func_ are in-place operations.
     # Perform parameter update - all processes will have the same update now
@@ -208,5 +209,5 @@ if rank == 0:
 
 
 # Cleanup
-dist.destroy_process_group()
 print(f"[Rank {rank}] done")
+dist.destroy_process_group()
