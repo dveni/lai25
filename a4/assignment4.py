@@ -107,7 +107,7 @@ def single_step_with_grad_accumulation(seed=42, device="cuda", accumulation_step
     for i in range(accumulation_steps):
         # Calculate the start and end indices for this micro-batch
         start_idx = i * micro_batch_size
-        end_idx = i * micro_batch_size + micro_batch_size
+        end_idx = start_idx + micro_batch_size
         # Slice the original inputs and targets to get this micro-batch
         micro_inputs = inputs[start_idx:end_idx]
         micro_targets = targets[start_idx:end_idx]
