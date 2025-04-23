@@ -5,7 +5,7 @@
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
-#SBATCH --time=00:03:00
+#SBATCH --time=00:10:00
 #SBATCH --output=output_4_%j.log
 #SBATCH --error=output_4_%j.err
 #SBATCH --environment=myenv
