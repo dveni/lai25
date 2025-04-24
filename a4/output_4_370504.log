@@ -1,0 +1,81 @@
+[sbatch-master] running on nid006810
+[sbatch-master] SLURM_NODELIST: nid[006810,006881,006893,006899]
+[sbatch-master] SLURM_NNODES: 4
+[sbatch-master] SLURM_NODEID: 0
+[sbatch-master] execute command on compute nodes
+[srun] rank=0 host=nid006810 noderank=0 localrank=0 wrong_host=nid006810
+[srun] rank=2 host=nid006893 noderank=2 localrank=0 wrong_host=nid006810
+[srun] rank=3 host=nid006899 noderank=3 localrank=0 wrong_host=nid006810
+[srun] rank=1 host=nid006881 noderank=1 localrank=0 wrong_host=nid006810
+[Distributed Init] Rank 4 initialized on 1 on GPU 0.
+[Distributed Init] Rank 8 initialized on 2 on GPU 0.
+[Distributed Init] Rank 12 initialized on 3 on GPU 0.
+[Distributed Init] Rank 0 initialized on 0 on GPU 0.
+[Distributed Init] Rank 9 initialized on 2 on GPU 1.
+[Distributed Init] Rank 10 initialized on 2 on GPU 2.
+[Distributed Init] Rank 11 initialized on 2 on GPU 3.
+[Distributed Init] Rank 7 initialized on 1 on GPU 3.[Distributed Init] Rank 5 initialized on 1 on GPU 1.
+
+[Distributed Init] Rank 6 initialized on 1 on GPU 2.
+[Distributed Init] Rank 14 initialized on 3 on GPU 2.[Distributed Init] Rank 15 initialized on 3 on GPU 3.
+
+[Distributed Init] Rank 13 initialized on 3 on GPU 1.
+[Distributed Init] Rank 2 initialized on 0 on GPU 2.
+[Distributed Init] Rank 3 initialized on 0 on GPU 3.
+[Distributed Init] Rank 1 initialized on 0 on GPU 1.
+[Rank 0] All ranks ready!
+[Rank 0] Compute the updated matrix which should be different from the initial weight matrix.
+[Rank 0] Tensors match: False | Max diff: 1.589296e-01 | Mean diff: 2.938349e-02
+[Rank 0] Compute the updated weight using batch accumulation. They should match.
+[Rank 0] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.238380e-09
+[Rank 0] Compute the updated weight using data parallelism.
+[DataParallel][Rank 0] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09
+[Rank 0] Compute the updated weight using tensor parallelism (FullColumnParallelLinear).
+[DataParallel][Rank 2] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 1] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 3] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09
+
+
+[DataParallel][Rank 4] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 7] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 6] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 5] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09
+
+
+
+[DataParallel][Rank 11] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 10] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 8] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 9] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09
+
+
+
+[DataParallel][Rank 15] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 14] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 12] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09[DataParallel][Rank 13] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 2.392539e-09
+
+
+
+[FullColumnParallel][Rank 1] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 3] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 0] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 2] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09
+
+
+
+[FullColumnParallel][Rank 9] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 8] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 11] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 10] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09
+
+
+
+[Rank 3] done[Rank 2] done[Rank 0] done[Rank 1] done
+
+
+
+[FullColumnParallel][Rank 7] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 5] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 4] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 6] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09
+
+
+
+[Rank 7] done[Rank 5] done[Rank 4] done[Rank 6] done
+
+
+
+[Rank 11] done[Rank 8] done[Rank 9] done[Rank 10] done
+
+
+
+[FullColumnParallel][Rank 15] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 12] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 14] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09[FullColumnParallel][Rank 13] Tensors match: True | Max diff: 2.384186e-07 | Mean diff: 7.501512e-09
+
+
+
+[Rank 12] done[Rank 15] done[Rank 13] done[Rank 14] done
+
+
+
+[sbatch-master] task finished
