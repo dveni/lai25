@@ -41,8 +41,12 @@ def pipeline_communicate(operation, pp_process_group, tensor=None, shapes=None):
     is_send = operation.startswith('send')
     peer_rank = dest if is_send else src
 
+    print(f"[{dist.get_global_rank()}] - {operation} to/from rank {peer_rank} with shape {print_shapes}")
+
     op = dist.P2POp(dist.isend if is_send else dist.irecv, tensor, peer_rank)
+    print(f"[{dist.get_global_rank()}] - {operation} op created")
     [req.wait() for req in dist.batch_isend_irecv([op])]
+    print(f"[{dist.get_global_rank()}] - {operation} op completed")
     torch.cuda.synchronize()
     return tensor if not is_send else None
 
