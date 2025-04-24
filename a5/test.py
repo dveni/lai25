@@ -37,6 +37,8 @@ def main(pp: int,
     rank = int(os.environ.get("RANK", 0))
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
 
+    print(f"Rank {rank} of {world_size} on local rank {local_rank}")
+
     # Init process groups
     dist.init_process_group("nccl")
     device_mesh = build_device_mesh(rank, world_size, pp)
@@ -61,7 +63,7 @@ def main(pp: int,
 
     train_dl_iterator = iter(input)
     ###################################################    
-    
+    print("Finished initializing the environment")
     ###################################################
     ###################### No PP ######################
     ###################################################
@@ -90,6 +92,7 @@ def main(pp: int,
     ################################################### 
     torch.cuda.synchronize()
     dist.barrier()
+    print("Finished forward pass without pipeline parallelism")
     ###################################################
     ######################## PP #######################
     ###################################################
