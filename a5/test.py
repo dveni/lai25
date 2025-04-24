@@ -110,7 +110,9 @@ def main(pp: int,
     input_tensors, output_tensors, output_tensors_pp = [], [], []
 
     for _ in range(number_of_microbatches): # All forward passes
+        print(f"[{rank}] - before recv_forward")
         input_tensor = pipeline_communicate(operation='recv_forward', pp_process_group=device_mesh["pp"].get_group(), shapes=tensor_shapes)
+        print(f"[{rank}] - after recv_forward")
         # Q8: 1. Fetch a batch from the dataloader if needed
         if device_mesh["pp"].get_local_rank() == 0:
             batch = next(train_dl_iterator)
@@ -120,7 +122,9 @@ def main(pp: int,
         input_tensor = input_tensor.to(device_id).require_grad_() if batch is None else batch.to(device_id).require_grad_()
         # 3. Compute the forward pass
         output = model_stage(input_tensor)
+        print(f"[{rank}] - before send_forward")
         pipeline_communicate(operation='send_forward', pp_process_group=device_mesh["pp"].get_group(), tensor=output)
+        print(f"[{rank}] - after send_forward")
         
         output_tensors_pp.append(output.detach().clone()) # NOTE(tj.solergibert) To check PP vs NON-PP outputs!
         
@@ -134,11 +138,15 @@ def main(pp: int,
         output_tensors.append(output)
 
     for _ in range(number_of_microbatches): # All backward passes
+        print(f"[{rank}] - before recv_backward")
         output_tensor_grad = pipeline_communicate(operation='recv_backward', pp_process_group=device_mesh["pp"].get_group(), shapes=tensor_shapes)
+        print(f"[{rank}] - after recv_backward")
         # Retrieve saved tensors in FIFO order to match forward pass sequence
         input_tensor, output_tensor = input_tensors.pop(0), output_tensors.pop(0)
         input_tensor_grad = model_stage.backward(input_tensor, output_tensor, output_tensor_grad)
+        print(f"[{rank}] - before send_backward")
         pipeline_communicate(operation='send_backward', pp_process_group=device_mesh["pp"].get_group(), tensor=input_tensor_grad)
+        print(f"[{rank}] - after send_backward")
 
     dist.barrier()
 
