@@ -175,11 +175,11 @@ def data_parallel_single_step(seed=42, device="cuda") -> torch.Tensor:
     # print(f"[Rank {rank}] Gradient before all_reduce: {model.W.grad}")
     # Synchronize gradients across all processes
     for param in model.parameters():
-        print(f"[Rank {rank}] param: {param}")
-        print(f"[Rank {rank}] Gradient before all_reduce: {param.grad}")
+        # print(f"[Rank {rank}] param: {param}")
+        # print(f"[Rank {rank}] Gradient before all_reduce: {param.grad}")
         # Sum the gradients across all processes
         dist.all_reduce(param.grad, op=ReduceOp.SUM)
-        print(f"[Rank {rank}] Gradient after all_reduce: {param.grad}")
+        # print(f"[Rank {rank}] Gradient after all_reduce: {param.grad}")
         # Average the gradients by dividing by world_size
         param.grad.div_(world_size) # Good to know: in pytorch func_ are in-place operations.
     # Perform parameter update - all processes will have the same update now
@@ -335,8 +335,8 @@ if rank == 0:
 else:
     # On all other ranks we create a tensor placeholder so we can distribute the updated_weight to all ranks
     updated_weight = torch.zeros(input_dim, output_dim, device="cuda")
-    # distribute updated weight to all ranks to enable a comparison with the baseline later on
-    dist.broadcast(updated_weight, src=0)
+# distribute updated weight to all ranks to enable a comparison with the baseline later on
+dist.broadcast(updated_weight, src=0)
 
 
 if rank == 0:
@@ -344,9 +344,9 @@ if rank == 0:
     batch_accum_weight = single_step_with_grad_accumulation()
     compare_tensors(updated_weight.cpu(), batch_accum_weight.cpu())
 
-# if rank == 0:
-#     print(f"[Rank {rank}] Compute the updated weight using data parallelism.")
-print(f"[Rank {rank}] Compute the updated weight using data parallelism.")
+if rank == 0:
+    print(f"[Rank {rank}] Compute the updated weight using data parallelism.")
+# print(f"[Rank {rank}] Compute the updated weight using data parallelism.")
 data_parallel_weight = data_parallel_single_step()
 # Compare on all ranks
 compare_tensors(updated_weight.cpu(), data_parallel_weight.cpu(), prefix="DataParallel")
