@@ -114,7 +114,7 @@ def main(pp: int,
         else:
             batch = None
         # 2. Move the batch from the dataloader OR the activations from the previous PP stage to the GPU
-        input_tensor = input_tensor.to(device_id) if batch is None else batch.to(device_id)
+        input_tensor = input_tensor.to(device_id).require_grad_() if batch is None else batch.to(device_id).require_grad_()
         # 3. Compute the forward pass
         output = model_stage(input_tensor)
         pipeline_communicate(operation='send_forward', pp_process_group=device_mesh["pp"].get_group(), tensor=output)
