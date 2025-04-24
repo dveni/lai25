@@ -23,7 +23,7 @@ export MASTER_PORT=12345 # Choose an unused port
 export FOOBAR=666
 export WORLD_SIZE=$(( SLURM_NNODES * SLURM_NTASKS_PER_NODE ))
 
-WORLD_SIZE=${SLURM_NNODES * SLURM_NTASKS_PER_NODE}
+WORLD_SIZE=$((SLURM_NNODES * SLURM_NTASKS_PER_NODE))
 
 echo "[sbatch-master] execute command on compute nodes"
 # The command that will run on each process
