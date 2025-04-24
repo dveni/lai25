@@ -21,11 +21,11 @@ def pipeline_communicate(operation, pp_process_group, tensor=None, shapes=None):
 
     if operation == 'recv_forward':
         if pp_is_first_stage: return None
-        print(f"[{dist.get_global_rank()}] - creating tensor recv_forward")
+        print(f"[{dist.get_rank(pp_process_group)}] - creating tensor recv_forward")
         tensor = torch.empty(shapes, requires_grad=True, device="cuda")
-        print(f"[{dist.get_global_rank()}] - tensor created")
+        print(f"[{dist.get_rank(pp_process_group)}] - tensor created")
         src = dist.get_global_rank(pp_process_group, pp_prev_rank)
-        print(f"[{dist.get_global_rank()}] - src rank {src}")
+        print(f"[{dist.get_rank(pp_process_group)}] - src rank {src}")
     
     elif operation == 'send_forward':
         if pp_is_last_stage: return
@@ -40,20 +40,20 @@ def pipeline_communicate(operation, pp_process_group, tensor=None, shapes=None):
         if pp_is_first_stage: return
         dest = dist.get_global_rank(pp_process_group, pp_prev_rank)
     
-    print(f"[{dist.get_global_rank()}] - a")
+    print(f"[{dist.get_rank(pp_process_group)}] - a")
     print_shapes = shapes if shapes else tensor.shape
-    print(f"[{dist.get_global_rank()}] - b")
+    print(f"[{dist.get_rank(pp_process_group)}] - b")
     is_send = operation.startswith('send')
-    print(f"[{dist.get_global_rank()}] - c")
+    print(f"[{dist.get_rank(pp_process_group)}] - c")
     peer_rank = dest if is_send else src
-    print(f"[{dist.get_global_rank()}] - d")
+    print(f"[{dist.get_rank(pp_process_group)}] - d")
 
-    print(f"[{dist.get_global_rank()}] - {operation} to/from rank {peer_rank} with shape {print_shapes}")
+    print(f"[{dist.get_rank(pp_process_group)}] - {operation} to/from rank {peer_rank} with shape {print_shapes}")
 
     op = dist.P2POp(dist.isend if is_send else dist.irecv, tensor, peer_rank)
-    print(f"[{dist.get_global_rank()}] - {operation} op created")
+    print(f"[{dist.get_rank(pp_process_group)}] - {operation} op created")
     [req.wait() for req in dist.batch_isend_irecv([op])]
-    print(f"[{dist.get_global_rank()}] - {operation} op completed")
+    print(f"[{dist.get_rank(pp_process_group)}] - {operation} op completed")
     torch.cuda.synchronize()
     return tensor if not is_send else None
 
