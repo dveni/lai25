@@ -344,8 +344,9 @@ if rank == 0:
     batch_accum_weight = single_step_with_grad_accumulation()
     compare_tensors(updated_weight.cpu(), batch_accum_weight.cpu())
 
-if rank == 0:
-    print(f"[Rank {rank}] Compute the updated weight using data parallelism.")
+# if rank == 0:
+#     print(f"[Rank {rank}] Compute the updated weight using data parallelism.")
+print(f"[Rank {rank}] Compute the updated weight using data parallelism.")
 data_parallel_weight = data_parallel_single_step()
 # Compare on all ranks
 compare_tensors(updated_weight.cpu(), data_parallel_weight.cpu(), prefix="DataParallel")
