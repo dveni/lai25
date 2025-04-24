@@ -21,8 +21,11 @@ def pipeline_communicate(operation, pp_process_group, tensor=None, shapes=None):
 
     if operation == 'recv_forward':
         if pp_is_first_stage: return None
+        print(f"[{dist.get_global_rank()}] - creating tensor recv_forward")
         tensor = torch.empty(shapes, requires_grad=True, device="cuda")
+        print(f"[{dist.get_global_rank()}] - tensor created")
         src = dist.get_global_rank(pp_process_group, pp_prev_rank)
+        print(f"[{dist.get_global_rank()}] - src rank {src}")
     
     elif operation == 'send_forward':
         if pp_is_last_stage: return
@@ -37,9 +40,13 @@ def pipeline_communicate(operation, pp_process_group, tensor=None, shapes=None):
         if pp_is_first_stage: return
         dest = dist.get_global_rank(pp_process_group, pp_prev_rank)
     
+    print(f"[{dist.get_global_rank()}] - a")
     print_shapes = shapes if shapes else tensor.shape
+    print(f"[{dist.get_global_rank()}] - b")
     is_send = operation.startswith('send')
+    print(f"[{dist.get_global_rank()}] - c")
     peer_rank = dest if is_send else src
+    print(f"[{dist.get_global_rank()}] - d")
 
     print(f"[{dist.get_global_rank()}] - {operation} to/from rank {peer_rank} with shape {print_shapes}")
 
