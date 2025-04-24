@@ -51,8 +51,8 @@ def main(pp: int,
     device_id = torch.device(f"cuda:{local_rank}")
 
     # Q2: Assert args
-    assert True # TODO
-    assert True # TODO
+    assert number_of_layers % pp == 0, f"number_of_layers {number_of_layers} must be divisible by pp {pp}"
+    assert global_batch_size % micro_batch_size == 0, f"global_batch_size {global_batch_size} must be divisible by micro_batch_size {micro_batch_size}"
     
     number_of_microbatches = global_batch_size // micro_batch_size
 
@@ -69,20 +69,22 @@ def main(pp: int,
     
     # Q3: Model definition & shape of the intermidiate tensors
     model = MyDummyModel(number_of_layers, hidden_size, intermediate_size).cuda()
-    tensor_shapes = (True, True, True) # TODO
+    tensor_shapes = (micro_batch_size, sequence_length, hidden_size) # TODO
 
     for _ in range(number_of_microbatches):
         # Q4: 1. Fetch a batch of data from the dataloader
-        # TODO
+        batch = next(train_dl_iterator)
         # 2. Move it to the GPU
-        # TODO
+        batch = batch.to(device_id)
         # 3. Compute the forward pass
-        # TODO
+        output = model(batch)
 
 
         output_tensors_no_pp.append(output.detach().clone()) # NOTE(tj.solergibert) To check PP vs NON-PP outputs!
         # 4. Compute the backward pass
-        # TODO
+        loss = output.mean()
+        loss.backward()
+
         
     
     ################################################### 
@@ -96,7 +98,7 @@ def main(pp: int,
     model_stage = PipelineStage(model, number_of_layers, device_mesh["pp"].get_local_rank(), pp).cuda()
 
     # Q6: Which ranks require the training dataloader?
-    if True: # TODO
+    if device_mesh["pp"].get_local_rank() == 0:
         train_dl_iterator = iter(input)
     else:
         train_dl_iterator = None
@@ -107,19 +109,22 @@ def main(pp: int,
     for _ in range(number_of_microbatches): # All forward passes
         input_tensor = pipeline_communicate(operation='recv_forward', pp_process_group=device_mesh["pp"].get_group(), shapes=tensor_shapes)
         # Q8: 1. Fetch a batch from the dataloader if needed
-        # TODO
+        if device_mesh["pp"].get_local_rank() == 0:
+            batch = next(train_dl_iterator)
+        else:
+            batch = None
         # 2. Move the batch from the dataloader OR the activations from the previous PP stage to the GPU
-        # TODO
+        input_tensor = input_tensor.to(device_id) if batch is None else batch.to(device_id)
         # 3. Compute the forward pass
-        # TODO
+        output = model_stage(input_tensor)
         pipeline_communicate(operation='send_forward', pp_process_group=device_mesh["pp"].get_group(), tensor=output)
         
         output_tensors_pp.append(output.detach().clone()) # NOTE(tj.solergibert) To check PP vs NON-PP outputs!
         
         # Compute loss on the last stage
         # 4. Compute the loss in the required stage
-        if True: # TODO
-            output = True # TODO
+        if device_mesh["pp"].get_local_rank() == pp - 1:
+            output = output.mean()
 
         # Save tensors to reconstruct computation graph during backward pass
         input_tensors.append(input_tensor)
@@ -135,15 +140,16 @@ def main(pp: int,
     dist.barrier()
 
     # Q9: Check the model outputs in the required rank
-    if True: # TODO
+    if device_mesh["pp"].get_local_rank() == pp - 1:
         for output_no_pp, output_pp in zip(output_tensors_no_pp, output_tensors_pp):
             torch.testing.assert_close(output_no_pp, output_pp)
     dist.barrier()
 
     # Q10: Check the grads of the required layers. Remember that we store the `layer_idx` in each layer of the model
     for pp_stage_layer in model_stage.pp_stage_layers:
-        torch.testing.assert_close() # TODO
-        torch.testing.assert_close() # TODO
+        layer_idx = pp_stage_layer.layer_idx
+        torch.testing.assert_close(pp_stage_layer.fc1.weight.grad, model.layers[layer_idx].fc1.weight.grad)
+        torch.testing.assert_close(pp_stage_layer.fc2.weight.grad, model.layers[layer_idx].fc2.weight.grad)
     ################################################### 
     torch.cuda.synchronize()
     dist.barrier()

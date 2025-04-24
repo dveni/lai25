@@ -19,22 +19,22 @@ def pipeline_communicate(operation, pp_process_group, tensor=None, shapes=None):
     pp_is_last_stage = pp_rank == dist.get_world_size(pp_process_group) - 1
     
     if operation == 'recv_forward':
-        if True: return None # TODO
-        tensor = torch.empty(shapes, requires_grad=True, device="cuda")
-        src = dist.get_global_rank(pp_process_group, pp_prev_rank)
+        if not pp_is_first_stage:
+            tensor = torch.empty(shapes, requires_grad=True, device="cuda")
+            src = dist.get_global_rank(pp_process_group, pp_prev_rank)
     
     elif operation == 'send_forward':
-        if True: return # TODO
-        dest = dist.get_global_rank(pp_process_group, pp_next_rank)
+        if not pp_is_last_stage:
+            dest = dist.get_global_rank(pp_process_group, pp_next_rank)
     
     elif operation == 'recv_backward':
-        if True: return None # TODO
-        tensor = torch.empty(shapes, requires_grad=True, device="cuda")
-        src = dist.get_global_rank(pp_process_group, pp_next_rank)
+        if not pp_is_last_stage:
+            tensor = torch.empty(shapes, requires_grad=True, device="cuda")
+            src = dist.get_global_rank(pp_process_group, pp_next_rank)
     
     elif operation == 'send_backward':
-        if True: return # TODO
-        dest = dist.get_global_rank(pp_process_group, pp_prev_rank)
+        if not pp_is_first_stage:
+            dest = dist.get_global_rank(pp_process_group, pp_prev_rank)
     
     print_shapes = shapes if shapes else tensor.shape
     is_send = operation.startswith('send')
@@ -52,7 +52,8 @@ def distribute_layers(num_layers: int, pp_rank: int, pp_world_size: int) -> List
         Returns a list with the layer indices that should be processed by this GPU.
         """
         # TODO
-        layers_in_current_stage = [0, 1, 2, 3] 
+        layers_per_stage = num_layers // pp_world_size
+        layers_in_current_stage = list(range(pp_rank * layers_per_stage, (pp_rank + 1) * layers_per_stage))
         return layers_in_current_stage
 
 class PipelineStage(nn.Module):
