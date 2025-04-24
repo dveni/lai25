@@ -8,3 +8,9 @@ wheels/
 
 # Virtual environments
 .venv
+*.zip
+*.out
+*.log
+*.err
+*nsys-rep
+*core*
