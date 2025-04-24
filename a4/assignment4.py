@@ -206,9 +206,9 @@ if rank == 0:
 
 if rank == 0:
     print(f"[Rank {rank}] Compute the updated weight using data parallelism.")
-    data_parallel_weight = data_parallel_single_step()
-    # Compare on all ranks
-    compare_tensors(updated_weight.cpu(), data_parallel_weight.cpu(), prefix="DataParallel")
+data_parallel_weight = data_parallel_single_step()
+# Compare on all ranks
+compare_tensors(updated_weight.cpu(), data_parallel_weight.cpu(), prefix="DataParallel")
 
 
 # Cleanup
