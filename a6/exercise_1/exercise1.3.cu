@@ -28,7 +28,7 @@ __global__ void square_coalesced(const float* in_array, float* out_array, const 
     const int threadid = threadIdx.x;
     const int blockid = blockIdx.x;
     const int blocksize = blockDim.x;
-    const int globalid = (blockid * blocksize + threadid) * EL_PER_THREAD;
+    const int globalid = (blockid * blocksize + threadid);
 
     if (globalid >= N) {
         return; // Out of bounds
@@ -37,7 +37,7 @@ __global__ void square_coalesced(const float* in_array, float* out_array, const 
     float in[EL_PER_THREAD];
 
     for (int i = 0; i < EL_PER_THREAD; i++) { // TODO!
-        in[i] = in_array[globalid + i];
+        in[i] = in_array[globalid + i*EL_PER_THREAD];
         in[i] = in[i] * in[i];
         out_array[globalid + i] = in[i];
     }
