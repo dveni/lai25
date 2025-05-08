@@ -188,5 +188,10 @@ def get_args():
         action='store_true',
         help="Set to quantize the model with `transformer_engine`"
     )
+    parser.add_argument(
+        "--quantization_torchao",
+        action='store_true',
+        help="Set to quantize the model with `torchao`"
+    )
     args = parser.parse_args()
     return args

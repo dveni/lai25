@@ -12,6 +12,9 @@ from utils import build_lr_scheduler, clip_grad_norm_, get_args, get_num_params,
 import transformer_engine.pytorch as te
 from transformer_engine.common import recipe
 
+from torchao.quantization import float8_weight_only, quantize_
+
+
 def train(args):
   logger.info(f"Experiment args: {args}")
   # Init
@@ -44,10 +47,16 @@ def train(args):
   with set_default_dtype(model_dtype):
     model = Transformer(model_config).to(device)
 
+  assert not (args.quantization and args.quantization_torchao)
+
   if args.quantization:
     logger.info("Quantizing model weights...")
     # Create an FP8 recipe. Note: All input args are optional.
     fp8_recipe = recipe.DelayedScaling(margin=0, fp8_format=recipe.Format.E4M3)
+
+  if args.quantization_torchao:
+    quantize_(model, float8_weight_only)
+
   
   if args.compile:
     logger.info("Using `torch.compile`")
@@ -93,7 +102,7 @@ def train(args):
           logits = model(input_ids)
     else:
       logits = model(input_ids)
-      
+
     loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1).float(), labels.flatten(0, 1), reduction="sum")
     loss = loss / num_items_in_batch
     del logits

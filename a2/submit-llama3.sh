@@ -32,7 +32,7 @@ TRAINING_CMD="python3 $ASSIGNMENT_DIR/train.py \
     --compile \
     --fused-optimizer \
     --profile \
-    --quantization
+    --quantization_torchao
     "
 
 srun --cpus-per-task $SLURM_CPUS_PER_TASK bash -c "$CMD_PREFIX $TRAINING_CMD"
