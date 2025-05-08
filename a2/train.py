@@ -55,7 +55,7 @@ def train(args):
     fp8_recipe = recipe.DelayedScaling(margin=0, fp8_format=recipe.Format.E4M3)
 
   if args.quantization_torchao:
-    quantize_(model, float8_weight_only)
+    quantize_(model, float8_weight_only())
 
   
   if args.compile:
