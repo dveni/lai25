@@ -9,7 +9,8 @@ from dataset import CollatorForCLM, ParquetDataset
 from model import Transformer, TransformerModelArgs
 from utils import build_lr_scheduler, clip_grad_norm_, get_args, get_num_params, get_num_flop_per_token, init_logger, logger, PRECISION_STR_TO_DTYPE, set_default_dtype
 
-from torchao.quantization import float8_weight_only, quantize_
+import transformer_engine.pytorch as te
+from transformer_engine.common import recipe
 
 def train(args):
   logger.info(f"Experiment args: {args}")
@@ -45,7 +46,8 @@ def train(args):
 
   if args.quantization:
     logger.info("Quantizing model weights...")
-    quantize_(model, float8_weight_only())
+    # Create an FP8 recipe. Note: All input args are optional.
+    fp8_recipe = recipe.DelayedScaling(margin=0, fp8_format=recipe.Format.E4M3)
   
   if args.compile:
     logger.info("Using `torch.compile`")
@@ -85,8 +87,13 @@ def train(args):
     labels = labels.to(device)
 
     optimizer.zero_grad()
-
-    logits = model(input_ids)
+    if args.quantization:
+      # Enable autocasting for the forward pass
+      with te.fp8_autocast(enabled=True, fp8_recipe=fp8_recipe):
+          logits = model(input_ids)
+    else:
+      logits = model(input_ids)
+      
     loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1).float(), labels.flatten(0, 1), reduction="sum")
     loss = loss / num_items_in_batch
     del logits
