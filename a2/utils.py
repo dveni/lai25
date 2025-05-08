@@ -183,5 +183,10 @@ def get_args():
         action='store_true',
         help="Set to compile the model with `torch.compile`"
     )
+    parser.add_argument(
+        "--quantization",
+        action='store_true',
+        help="Set to quantize the model with `transformer_engine`"
+    )
     args = parser.parse_args()
     return args
