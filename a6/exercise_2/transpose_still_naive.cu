@@ -6,7 +6,7 @@ const int BLOCK_ROWS = 1;
 __global__ void transposeCoalesced(const float *idata, float *odata)
 {  
    // Allocate shared memory for the tile that is being loaded by one block
-   __shared__ float tile[TILE_DIM][TILE_DIM];
+   __shared__ float tile[TILE_DIM][TILE_DIM+1];
 
    // Calculate the global thread index to start loading data at
    int x = blockIdx.x * TILE_DIM + threadIdx.x;
