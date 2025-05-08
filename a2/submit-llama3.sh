@@ -16,7 +16,7 @@ echo "START TIME: $(date)"
 
 # Set up ENV
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-ASSIGNMENT_DIR="/iopsstor/scratch/cscs/$USER/assignment-2"
+ASSIGNMENT_DIR="/iopsstor/scratch/cscs/$USER/lai25/a2"
 
 CMD_PREFIX="numactl --membind=0-3"
 
