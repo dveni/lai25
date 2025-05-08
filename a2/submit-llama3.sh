@@ -3,7 +3,7 @@
 #SBATCH --account=a-large-sc
 #SBATCH --time=00:14:59
 #SBATCH --job-name=lsai
-#SBATCH --output=/iopsstor/scratch/cscs/%u/assignment-2/logs/%x-%j.out
+#SBATCH --output=logs/%x-%j.out
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
