@@ -9,6 +9,8 @@ from dataset import CollatorForCLM, ParquetDataset
 from model import Transformer, TransformerModelArgs
 from utils import build_lr_scheduler, clip_grad_norm_, get_args, get_num_params, get_num_flop_per_token, init_logger, logger, PRECISION_STR_TO_DTYPE, set_default_dtype
 
+from torchao.quantization import float8_weight_only, quantize_
+
 def train(args):
   logger.info(f"Experiment args: {args}")
   # Init
@@ -40,6 +42,10 @@ def train(args):
     )
   with set_default_dtype(model_dtype):
     model = Transformer(model_config).to(device)
+
+  if args.quantization:
+    logger.info("Quantizing model weights...")
+    quantize_(model, float8_weight_only())
   
   if args.compile:
     logger.info("Using `torch.compile`")
