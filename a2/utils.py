@@ -34,12 +34,6 @@ def inspect_model(model: FSDPModule):
         # print(param.get_local_tensor())
 
 
-# def inspect_mixed_precision(model: FSDPModule):
-#     model.unshard()
-#     for param in model.parameters(recurse=False):
-#         assert param.dtype == torch.bfloat16
-#     model.reshard()
-
 def init_distributed():
     """
     Initialise the distributed environment.

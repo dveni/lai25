@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from torch.distributed.fsdp import fully_shard, MixedPrecisionPolicy
-from utils import inspect_mixed_precision, inspect_model
+from utils import inspect_model
 
 from torch.utils.data.distributed import DistributedSampler
 
