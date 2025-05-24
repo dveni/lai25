@@ -90,6 +90,8 @@ def train(args):
     logger.info("Using `torch.compile`")
     model = torch.compile(model, fullgraph=True)
   
+  logger.info(f"Model parameters: {get_num_params(model, exclude_embedding=True)}")
+  logger.info("DDPing model...")
   model = DDP(model, device_ids=[ddp_local_rank])
 
   model.train()
