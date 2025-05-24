@@ -8,6 +8,10 @@ import torch.distributed as dist
 
 import torch
 from torch.optim.lr_scheduler import LambdaLR
+from model import Transformer
+from torch.distributed.fsdp import FSDPModule
+from torch.distributed.tensor import Shard
+
 
 logger = logging.getLogger()
 
@@ -35,7 +39,7 @@ def inspect_mixed_precision(model: FSDPModule):
     for param in model.parameters(recurse=False):
         assert param.dtype == torch.bfloat16
     model.reshard()
-    
+
 def init_distributed():
     """
     Initialise the distributed environment.
