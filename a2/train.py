@@ -4,7 +4,9 @@ import time
 import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
-from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.distributed.fsdp import fully_shard, MixedPrecisionPolicy
+from utils import inspect_mixed_precision, inspect_model
+
 from torch.utils.data.distributed import DistributedSampler
 
 import torch.distributed as dist
@@ -93,10 +95,17 @@ def train(args):
 
   
 
+  if master_process:
+    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"\n--> model has {total_params / 1e6} Million params\n")
   
-  logger.info(f"Model parameters: {get_num_params(model, exclude_embedding=True)}")
-  logger.info("DDPing model...")
-  model = DDP(model, device_ids=[ddp_local_rank])
+  logger.info("Sharding model...")
+  for layer in model.layers:
+        fully_shard(layer)
+  fully_shard(model)
+
+
+  inspect_model(model)
 
   print(torch.cuda.memory_summary())
   
