@@ -85,12 +85,12 @@ def train(args):
     logger.info("Quantizing model weights with torchao...")
     quantize_(model, float8_weight_only())
 
-  model = DDP(model, device_ids=[ddp_local_rank])
   
   if args.compile:
     logger.info("Using `torch.compile`")
     model = torch.compile(model, fullgraph=True)
   
+  model = DDP(model, device_ids=[ddp_local_rank])
 
   model.train()
 
