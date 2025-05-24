@@ -13,7 +13,7 @@ import torch.distributed as dist
 
 
 from dataset import CollatorForCLM, ParquetDataset
-from model import Transformer, TransformerModelArgs
+from model import Transformer, TransformerModelArgs, TransformerBlock
 from utils import build_lr_scheduler, clip_grad_norm_, get_args, get_num_params, get_num_flop_per_token, init_logger, logger, PRECISION_STR_TO_DTYPE, set_default_dtype, init_distributed
 
 import transformer_engine.pytorch as te
@@ -21,7 +21,7 @@ from transformer_engine.common import recipe
 
 from torchao.quantization import float8_weight_only, quantize_
 import subprocess
-
+import itertools
 
 # fix random seed
 torch.manual_seed(42)
@@ -79,8 +79,9 @@ def train(args):
 
   print(torch.cuda.memory_summary())
 
-  with set_default_dtype(model_dtype):
-    model = Transformer(model_config).to(device)
+  with torch.device("meta"):
+    with set_default_dtype(model_dtype):
+      model = Transformer(model_config)
 
   assert not (args.quantization and args.quantization_torchao)
 
@@ -101,9 +102,13 @@ def train(args):
   
   logger.info("Sharding model...")
   for layer in model.layers:
-        fully_shard(layer)
+        if isinstance(layer, TransformerBlock):
+          fully_shard(layer)
   fully_shard(model)
-
+  for tensor in itertools.chain(model.parameters(), model.buffers()):
+    assert tensor.device == torch.device("meta")
+  model.to_empty(device="cuda")
+  model.reset_parameters()
 
   inspect_model(model)
 
