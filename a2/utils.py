@@ -35,7 +35,7 @@ def init_distributed():
     dist.init_process_group(backend="nccl")
     
     print(f"[Distributed Init] Rank {rank} initialized on {node_id} on GPU {local_rank}.")
-    dist.barrier()
+    # dist.barrier()
     if rank == 0:
         print(f"[Rank {rank}] All ranks ready!")
     return rank, local_rank, world_size
