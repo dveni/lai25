@@ -108,7 +108,7 @@ def train(args):
   for tensor in itertools.chain(model.parameters(), model.buffers()):
     assert tensor.device == torch.device("meta")
   model.to_empty(device="cuda")
-  model.reset_parameters()
+  # model.reset_parameters()
 
   inspect_model(model)
 
