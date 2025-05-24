@@ -5,7 +5,7 @@
 #SBATCH --time=00:14:59
 #SBATCH --job-name=lsai
 #SBATCH --output=logs/%x-%j.out
-#SBATCH --nodes=4
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
 #SBATCH --environment=myenv #/iopsstor/scratch/cscs/dveranieto/ngc_pt_jan.toml     # Vanilla 25.01 PyTorch NGC Image 
@@ -58,9 +58,9 @@ $ASSIGNMENT_DIR/train.py \
 --lr-warmup-steps 100 \
 --training-steps 1000 \
 --fused-optimizer \
+--quantization_torchao
 "
 # --compile \
-# --quantization_torchao
 
 # srun --cpus-per-task $SLURM_CPUS_PER_TASK bash -c "$CMD_PREFIX $TRAINING_CMD"
 srun bash -c "$TRAINING_CMD"
