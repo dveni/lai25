@@ -20,6 +20,8 @@ import transformer_engine.pytorch as te
 from transformer_engine.common import recipe
 
 from torchao.quantization import float8_weight_only, quantize_
+from torchao.float8 import convert_to_float8_training  
+
 import subprocess
 import itertools
 
@@ -92,7 +94,10 @@ def train(args):
 
   if args.quantization_torchao:
     logger.info("Quantizing model weights with torchao...")
-    quantize_(model, float8_weight_only())
+    # quantize_(model, float8_weight_only())
+    convert_to_float8_training(model)
+
+
 
   
 
