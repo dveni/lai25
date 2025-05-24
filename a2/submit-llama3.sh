@@ -49,6 +49,14 @@ torchrun \
 --master_addr="${MASTER_ADDR}" \
 --master_port="${MASTER_PORT}" \
 $ASSIGNMENT_DIR/train.py
+--sequence-length 4096 \
+--batch-size 1 \
+--learning-rate 5e-5 \
+--lr-warmup-steps 100 \
+--training-steps 1000 \
+--compile \
+--fused-optimizer \
+--quantization_torchao
 "
 
 srun --cpus-per-task $SLURM_CPUS_PER_TASK bash -c "$CMD_PREFIX $TRAINING_CMD"
