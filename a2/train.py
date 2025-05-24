@@ -134,6 +134,7 @@ def train(args):
       logits = model(input_ids)
 
     loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1).float(), labels.flatten(0, 1), reduction="sum")
+    del input_ids, labels
     loss = loss / num_items_in_batch
     del logits
     loss.backward()
