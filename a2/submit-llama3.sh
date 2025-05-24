@@ -1,16 +1,19 @@
 #!/bin/bash
 
 #SBATCH --account=a-large-sc
+#SBATCH --partition=normal
 #SBATCH --time=00:14:59
 #SBATCH --job-name=lsai
 #SBATCH --output=logs/%x-%j.out
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-task=72
-#SBATCH --mem=460000
 #SBATCH --environment=myenv #/iopsstor/scratch/cscs/dveranieto/ngc_pt_jan.toml     # Vanilla 25.01 PyTorch NGC Image 
 #SBATCH --no-requeue	# Prevent Slurm to requeue the job if the execution crashes (e.g. node failure) so we don't loose the logs
+
+
+set -eo pipefail
+
 
 echo "START TIME: $(date)"
 echo "[sbatch-master] running on $(hostname)"
@@ -26,7 +29,7 @@ export MASTER_PORT=12345
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 ASSIGNMENT_DIR="/iopsstor/scratch/cscs/$USER/lai25/a2"
 
-CMD_PREFIX="numactl --membind=0-3"
+# CMD_PREFIX="numactl --membind=0-3"
 
 # cd $ASSIGNMENT_DIR
 
@@ -59,6 +62,7 @@ $ASSIGNMENT_DIR/train.py \
 "
 # --quantization_torchao
 
-srun --cpus-per-task $SLURM_CPUS_PER_TASK bash -c "$CMD_PREFIX $TRAINING_CMD"
+# srun --cpus-per-task $SLURM_CPUS_PER_TASK bash -c "$CMD_PREFIX $TRAINING_CMD"
+srun bash -c "$TRAINING_CMD"
 
 echo "END TIME: $(date)"
