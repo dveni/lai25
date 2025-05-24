@@ -145,6 +145,8 @@ def train(args):
     optimizer.step()
     lr_scheduler.step()
 
+    logger.info(f"Step {train_step} | Loss: {loss.item():.2f} | Learning Rate: {optimizer.param_groups[0]['lr']:.6f}")
+
     # Logging
     if (train_step == 1 or train_step % args.logging_frequency == 0):
       time_delta = time.perf_counter() - time_last_log
