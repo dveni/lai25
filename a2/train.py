@@ -5,12 +5,14 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data.distributed import DistributedSampler
+
 import torch.distributed as dist
 
 
 from dataset import CollatorForCLM, ParquetDataset
 from model import Transformer, TransformerModelArgs
-from utils import build_lr_scheduler, clip_grad_norm_, get_args, get_num_params, get_num_flop_per_token, init_logger, logger, PRECISION_STR_TO_DTYPE, set_default_dtype
+from utils import build_lr_scheduler, clip_grad_norm_, get_args, get_num_params, get_num_flop_per_token, init_logger, logger, PRECISION_STR_TO_DTYPE, set_default_dtype, init_distributed
 
 import transformer_engine.pytorch as te
 from transformer_engine.common import recipe
@@ -29,12 +31,9 @@ torch.backends.cudnn.allow_tf32 = True
 
 def train(args):
   # Init
-  dist.init_process_group(backend="nccl")
-  ddp_rank = int(os.environ["RANK"])
-  ddp_local_rank = int(os.environ["LOCAL_RANK"])
-  world_size = int(os.environ["WORLD_SIZE"])
+  ddp_rank, ddp_local_rank, world_size = init_distributed()
   device = f"cuda:{ddp_local_rank}"
-  torch.cuda.set_device(device)
+
   master_process = ddp_rank == 0
   model_dtype = PRECISION_STR_TO_DTYPE[args.model_dtype]
   
@@ -53,7 +52,9 @@ def train(args):
                         batch_size=args.batch_size,
                         collate_fn=train_collator,
                         num_workers=4,
-                        pin_memory=True,)
+                        pin_memory=True,
+                        shuffle=False,
+                        sampler=DistributedSampler(train_ds))
   train_dl_iterator = iter(train_dl)
 
   # Set up Model
@@ -163,6 +164,8 @@ def train(args):
 
 
   logger.info("Training completed")
+  dist.destroy_process_group()
+
 
 if __name__ == "__main__":
   init_logger()

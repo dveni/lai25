@@ -3,6 +3,8 @@ import functools
 import logging
 
 from contextlib import contextmanager
+import os
+import torch.distributed as dist
 
 import torch
 from torch.optim.lr_scheduler import LambdaLR
@@ -15,6 +17,28 @@ PRECISION_STR_TO_DTYPE = {
     "fp32": torch.float32,
     "fp64": torch.float64,
 }
+
+def init_distributed():
+    """
+    Initialise the distributed environment.
+    Assumes that environment variables RANK, LOCAL_RANK, and WORLD_SIZE are set.
+    """
+    rank = int(os.environ["RANK"])
+    local_rank = int(os.environ["LOCAL_RANK"])
+    world_size = int(os.environ["WORLD_SIZE"])
+    node_id = os.environ.get("SLURM_NODEID", "N/A")
+    
+    # Set the current device for this process
+    torch.cuda.set_device(local_rank)
+    
+    # Initialise the process group with NCCL backend (requires Nvidia GPUs)
+    dist.init_process_group(backend="nccl")
+    
+    print(f"[Distributed Init] Rank {rank} initialized on {node_id} on GPU {local_rank}.")
+    dist.barrier()
+    if rank == 0:
+        print(f"[Rank {rank}] All ranks ready!")
+    return rank, local_rank, world_size
 
 def init_logger():
     logger.setLevel(logging.INFO)

@@ -48,7 +48,7 @@ torchrun \
 --nproc_per_node=1 \
 --master_addr="${MASTER_ADDR}" \
 --master_port="${MASTER_PORT}" \
-$ASSIGNMENT_DIR/train.py
+$ASSIGNMENT_DIR/train.py \
 --sequence-length 4096 \
 --batch-size 1 \
 --learning-rate 5e-5 \
