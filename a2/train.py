@@ -4,6 +4,9 @@ import time
 import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
+from torch.nn.parallel import DistributedDataParallel as DDP
+import torch.distributed as dist
+
 
 from dataset import CollatorForCLM, ParquetDataset
 from model import Transformer, TransformerModelArgs
@@ -14,12 +17,32 @@ from transformer_engine.common import recipe
 
 from torchao.quantization import float8_weight_only, quantize_
 
+# fix random seed
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
+torch.cuda.manual_seed_all(42)
+
+
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+
 
 def train(args):
-  logger.info(f"Experiment args: {args}")
   # Init
-  device = torch.device(f"cuda:{int(os.getenv('LOCAL_RANK', 0))}")
+  dist.init_process_group(backend="nccl")
+  ddp_rank = int(os.environ["RANK"])
+  ddp_local_rank = int(os.environ["LOCAL_RANK"])
+  world_size = int(os.environ["WORLD_SIZE"])
+  device = f"cuda:{ddp_local_rank}"
+  torch.cuda.set_device(device)
+  master_process = ddp_rank == 0
   model_dtype = PRECISION_STR_TO_DTYPE[args.model_dtype]
+  
+  if master_process:
+    logger.info(f"Experiment args: {args}")
+    logger.info(f"Distributed training with {world_size} processes on device {device}")
+  
+  logger.info(f"DDP rank: {ddp_rank}, Local rank: {ddp_local_rank}, World size: {world_size}")
 
   # Set up DataLoader
   logger.info("Setting up DataLoaders...")
@@ -28,11 +51,14 @@ def train(args):
   train_collator = CollatorForCLM(args.sequence_length, tokenizer.pad_token_id)
   train_dl = DataLoader(train_ds,
                         batch_size=args.batch_size,
-                        collate_fn=train_collator)
+                        collate_fn=train_collator,
+                        num_workers=4,
+                        pin_memory=True,)
   train_dl_iterator = iter(train_dl)
 
   # Set up Model
-  logger.info("Setting up Model...")
+  if master_process:
+    logger.info("Setting up Model...")
   model_config = TransformerModelArgs(
         dim=4096,
         n_layers=32,
@@ -50,18 +76,21 @@ def train(args):
   assert not (args.quantization and args.quantization_torchao)
 
   if args.quantization:
-    logger.info("Quantizing model weights...")
+    logger.info("Quantizing model weights with transformer engine...")
     # Create an FP8 recipe. Note: All input args are optional.
     fp8_recipe = recipe.DelayedScaling(margin=0, fp8_format=recipe.Format.E4M3)
 
   if args.quantization_torchao:
+    logger.info("Quantizing model weights with torchao...")
     quantize_(model, float8_weight_only())
 
+  model = DDP(model, device_ids=[ddp_local_rank])
   
   if args.compile:
     logger.info("Using `torch.compile`")
     model = torch.compile(model, fullgraph=True)
   
+
   model.train()
 
   # Build Optimizers & LR Scheduler
