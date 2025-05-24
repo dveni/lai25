@@ -110,8 +110,8 @@ def train(args):
 
   
   logger.info(f"Model parameters: {get_num_params(model, exclude_embedding=True)}")
-  logger.info("DDPing model...")
-  model = DDP(model, device_ids=[ddp_local_rank])
+  # logger.info("DDPing model...")
+  # model = DDP(model, device_ids=[ddp_local_rank])
 
   try:
     output = subprocess.check_output(['nvidia-smi'], stderr=subprocess.STDOUT, encoding='utf-8')
