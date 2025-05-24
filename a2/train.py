@@ -55,7 +55,7 @@ def train(args):
                         pin_memory=True,
                         shuffle=False,
                         sampler=DistributedSampler(train_ds))
-  train_dl_iterator = iter(train_dl)
+  # train_dl_iterator = iter(train_dl)
 
   # Set up Model
   if master_process:
@@ -110,15 +110,17 @@ def train(args):
 
   logger.info("Starting training!")
   train_step = 0
-  while train_step < args.training_steps:
+  # while train_step < args.training_steps:
+  for i, (input_ids, labels) in enumerate(train_dl):
     train_step += 1
+    if train_step > args.training_steps:
+      break
 
     # Profiling
     if args.profile and args.profile_step_start == train_step:
       torch.cuda.cudart().cudaProfilerStart()
       torch.autograd.profiler.emit_nvtx(record_shapes=True).__enter__()
 
-    input_ids, labels = next(train_dl_iterator)
     ntokens_since_last_log += args.batch_size * args.sequence_length
     num_items_in_batch = labels.ne(-100).sum()
     ntraining_tokens_since_last_log += num_items_in_batch
@@ -134,7 +136,7 @@ def train(args):
       logits = model(input_ids)
 
     loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1).float(), labels.flatten(0, 1), reduction="sum")
-    del input_ids, labels
+    # del input_ids, labels
     loss = loss / num_items_in_batch
     del logits
     loss.backward()
