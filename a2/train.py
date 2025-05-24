@@ -75,12 +75,7 @@ def train(args):
     )
   
 
-  try:
-    output = subprocess.check_output(['nvidia-smi'], stderr=subprocess.STDOUT, encoding='utf-8')
-    print(output)
-  except subprocess.CalledProcessError as e:
-      print("nvidia-smi failed:")
-      print(e.output)
+  print(torch.cuda.memory_summary())
 
   with set_default_dtype(model_dtype):
     model = Transformer(model_config).to(device)
@@ -97,28 +92,18 @@ def train(args):
     quantize_(model, float8_weight_only())
 
   
-  if args.compile:
-    logger.info("Using `torch.compile`")
-    model = torch.compile(model, fullgraph=True)
-
-  try:
-    output = subprocess.check_output(['nvidia-smi'], stderr=subprocess.STDOUT, encoding='utf-8')
-    print(output)
-  except subprocess.CalledProcessError as e:
-      print("nvidia-smi failed:")
-      print(e.output)
 
   
   logger.info(f"Model parameters: {get_num_params(model, exclude_embedding=True)}")
-  # logger.info("DDPing model...")
-  # model = DDP(model, device_ids=[ddp_local_rank])
+  logger.info("DDPing model...")
+  model = DDP(model, device_ids=[ddp_local_rank])
 
-  try:
-    output = subprocess.check_output(['nvidia-smi'], stderr=subprocess.STDOUT, encoding='utf-8')
-    print(output)
-  except subprocess.CalledProcessError as e:
-      print("nvidia-smi failed:")
-      print(e.output)
+  print(torch.cuda.memory_summary())
+  
+  if args.compile:
+    logger.info("Using `torch.compile`")
+    model = torch.compile(model, fullgraph=True)
+  print(torch.cuda.memory_summary())
 
   model.train()
 
