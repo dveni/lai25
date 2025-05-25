@@ -1,0 +1,74 @@
+{
+    "dataset": "/capstor/store/cscs/ethz/large-sc/datasets/train_data.parquet",
+    "tokenizer_name_or_path": "unsloth/Mistral-Nemo-Base-2407-bnb-4bit",
+    "sequence_length": 4096,
+    "batch_size": 1,
+    "fused_optimizer": false,
+    "learning_rate": 5e-05,
+    "lr_warmup_steps": 100,
+    "training_steps": 20,
+    "logging_frequency": 5,
+    "profile": false,
+    "profile_step_start": 10,
+    "profile_step_end": 12,
+    "grad_max_norm": 1,
+    "model_dtype": "bf16",
+    "compile": true,
+    "quantization": false,
+    "quantization_torchao": true,
+    "enable_fsdp_float8_all_gather": true,
+    "force_recompute_fp8_weight_in_bwd": true,
+    "quantize_optimizer": true,
+    "train_steps": [
+        1,
+        5,
+        10,
+        15,
+        20
+    ],
+    "losses": [
+        11.783503532409668,
+        11.783501625061035,
+        11.783501625061035,
+        11.7835054397583,
+        11.783498764038086
+    ],
+    "tokens_per_second": [
+        75.9246368321006,
+        3887.8290851178704,
+        3750.008742662406,
+        3731.2013010539285,
+        3737.2756967165838
+    ],
+    "training_tokens_per_second": [
+        23.170360565185547,
+        747.0023193359375,
+        929.994873046875,
+        1707.0975341796875,
+        623.3659057617188
+    ],
+    "mfus": [
+        0.3956771760269414,
+        20.2612129271911,
+        19.54296959831701,
+        19.444955624270744,
+        19.476612011738027
+    ],
+    "tflops": [
+        3.9132472709064507,
+        200.38339584991996,
+        193.27996932735525,
+        192.31061112403762,
+        192.62369279608907
+    ],
+    "memory_summaries": [
+        59379106304,
+        65822090240,
+        65822090240,
+        65822090240,
+        65822090240
+    ],
+    "training_start": 999561.514483961,
+    "training_end": 999636.224321442,
+    "training_duration": 74.70983748091385
+}
