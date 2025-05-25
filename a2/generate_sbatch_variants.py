@@ -52,7 +52,8 @@ echo "END TIME: $(date)"
 os.makedirs("generated_jobs", exist_ok=True)
 
 # (nodes, gpus_per_node) combinations
-gpu_configs = [(1, 1), (1, 4), (2, 4), (3, 4), (4, 4)]
+gpu_configs = [(1, 4), (2, 4), (3, 4), (4, 4)]
+# gpu_configs = [(1, 1), (1, 4), (2, 4), (3, 4), (4, 4)]
 
 torchao_options = [True, False]
 compile_options = [True, False]

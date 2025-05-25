@@ -2,7 +2,7 @@
 
 #SBATCH --account=a-large-sc
 #SBATCH --partition=normal
-#SBATCH --time=00:59:59
+#SBATCH --time=00:14:59
 #SBATCH --job-name=lsai
 #SBATCH --output=logs/%x-%j.out
 #SBATCH --nodes=1
