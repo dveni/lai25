@@ -5,9 +5,9 @@
 #SBATCH --time=00:14:59
 #SBATCH --job-name=lsai
 #SBATCH --output=logs/%x-%j.out
-#SBATCH --nodes=4
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=4
+#SBATCH --gpus-per-node=1
 #SBATCH --environment=myenv
 #SBATCH --no-requeue
 
@@ -29,7 +29,7 @@ TRAINING_CMD="
 torchrun \
 --nnodes=$SLURM_NNODES \
 --node_rank=$SLURM_NODEID \
---nproc_per_node=4 \
+--nproc_per_node=1 \
 --master_addr=$MASTER_ADDR \
 --master_port=$MASTER_PORT \
 $ASSIGNMENT_DIR/train.py \
@@ -37,8 +37,9 @@ $ASSIGNMENT_DIR/train.py \
 --batch-size 1 \
 --learning-rate 5e-5 \
 --lr-warmup-steps 100 \
---training-steps 1000 \
---quantization_torchao
+--training-steps 100 \
+--fused-optimizer \
+--compile
 "
 
 srun bash -c "$TRAINING_CMD"

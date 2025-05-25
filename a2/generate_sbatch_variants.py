@@ -40,7 +40,7 @@ $ASSIGNMENT_DIR/train.py \\
 --batch-size 1 \\
 --learning-rate 5e-5 \\
 --lr-warmup-steps 100 \\
---training-steps 1000 \\
+--training-steps 100 \\
 {extra_flags}
 "
 
@@ -52,7 +52,7 @@ echo "END TIME: $(date)"
 os.makedirs("generated_jobs_niklas", exist_ok=True)
 
 # (nodes, gpus_per_node) combinations
-gpu_configs = [(4, 4)]
+gpu_configs = [(1, 1)]
 # gpu_configs = [(1, 4), (2, 4), (3, 4), (4, 4)]
 # gpu_configs = [(1, 1), (1, 4), (2, 4), (3, 4), (4, 4)]
 
