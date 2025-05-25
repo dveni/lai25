@@ -133,7 +133,7 @@ def train(args):
     # Use AdamW8bit from torchao
     if args.fused_optimizer:
       raise NotImplementedError("Fused optimizer is not supported with torchao quantization")
-    optimizer = AdamW8bit(model.parameters(), lr=args.learning_rate, fused=args.fused_optimizer)
+    optimizer = AdamW8bit(model.parameters(), lr=args.learning_rate)
   else:
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, fused=args.fused_optimizer)
 
