@@ -143,6 +143,13 @@ def train(args):
   logger.info("Starting training!")
   train_step = 0
   # while train_step < args.training_steps:
+  train_steps = []
+  losses = []
+  tokens_per_second_list = []
+  training_tokens_per_second_list = []
+  mfus = []
+  tflops_list = []
+  memory_summaries = []
   for i, (input_ids, labels) in enumerate(train_dl):
     train_step += 1
     if train_step > args.training_steps:
@@ -153,9 +160,9 @@ def train(args):
       torch.cuda.cudart().cudaProfilerStart()
       torch.autograd.profiler.emit_nvtx(record_shapes=True).__enter__()
 
-    ntokens_since_last_log += args.batch_size * args.sequence_length
+    ntokens_since_last_log += args.batch_size * args.sequence_length * world_size
     num_items_in_batch = labels.ne(-100).sum()
-    ntraining_tokens_since_last_log += num_items_in_batch
+    ntraining_tokens_since_last_log += num_items_in_batch * world_size
     input_ids = input_ids.to(device)
     labels = labels.to(device)
 
@@ -189,6 +196,14 @@ def train(args):
       training_tps = ntraining_tokens_since_last_log / time_delta
 
       logger.info(f"Step: {train_step} | Loss: {loss.item():.2f} | Tokens per second: {tps:.2f} | Training tokens per second (%): {100*training_tps/tps:.2f} | MFU (%): {mfu:.2f} | TFLOPs: {tflops:.2f}")
+      if master_process:
+        train_steps.append(train_step)
+        losses.append(loss.item())
+        tokens_per_second_list.append(tps)
+        training_tokens_per_second_list.append(training_tps)
+        mfus.append(mfu)
+        tflops_list.append(tflops)
+        memory_summaries.append(torch.cuda.memory_summary())
       ntokens_since_last_log = 0
       ntraining_tokens_since_last_log = 0
       time_last_log = time.perf_counter()
@@ -199,6 +214,20 @@ def train(args):
 
 
   logger.info("Training completed")
+  if master_process:
+    # Save lists
+    import numpy as np
+    np.savez("train_steps.npz", train_steps=np.array(train_steps))
+    np.savez("losses.npz", losses=np.array(losses))
+    np.savez("tokens_per_second.npz", tokens_per_second=np.array(tokens_per_second_list))
+    np.savez("training_tokens_per_second.npz", training_tokens_per_second=np.array(training_tokens_per_second_list))
+    np.savez("mfus.npz", mfus=np.array(mfus))
+    np.savez("tflops.npz", tflops=np.array(tflops_list))
+    with open("memory_summaries.txt", "w") as f:
+      for memory_summary in memory_summaries:
+        f.write(memory_summary + "\n\n")
+
+
   dist.destroy_process_group()
 
 
