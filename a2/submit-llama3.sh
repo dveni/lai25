@@ -5,7 +5,7 @@
 #SBATCH --time=00:14:59
 #SBATCH --job-name=lsai
 #SBATCH --output=logs/%x-%j.out
-#SBATCH --nodes=1
+#SBATCH --nodes=8
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
 #SBATCH --environment=myenv #/iopsstor/scratch/cscs/dveranieto/ngc_pt_jan.toml     # Vanilla 25.01 PyTorch NGC Image 
@@ -33,7 +33,7 @@ TRAINING_CMD="
 torchrun \
 --nnodes="${SLURM_NNODES}" \
 --node_rank=\$SLURM_NODEID \
---nproc_per_node=1 \
+--nproc_per_node=4 \
 --master_addr="${MASTER_ADDR}" \
 --master_port="${MASTER_PORT}" \
 $ASSIGNMENT_DIR/train.py \

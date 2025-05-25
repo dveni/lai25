@@ -230,14 +230,15 @@ def train(args):
       training_tps = ntraining_tokens_since_last_log / time_delta
 
       if master_process:
-        logger.info(f"Step: {train_step} | Loss: {loss.item():.2f} | Tokens per second: {tps:.2f} | Training tokens per second (%): {100*training_tps/tps:.2f} | MFU (%): {mfu:.2f} | TFLOPs: {tflops:.2f}")
+        vram_peak = torch.cuda.memory_stats()["allocated_bytes.all.peak"]
+        logger.info(f"Step: {train_step} | Loss: {loss.item():.2f} | Tokens per second: {tps:.2f} | Training tokens per second (%): {100*training_tps/tps:.2f} | MFU (%): {mfu:.2f} | TFLOPs: {tflops:.2f} | VRAM peak: {(1024 ** 3):.2f} GB")
         train_steps.append(train_step)
         losses.append(loss.item())
         tokens_per_second_list.append(tps)
         training_tokens_per_second_list.append(training_tps)
         mfus.append(mfu)
         tflops_list.append(tflops)
-        memory_summaries.append(torch.cuda.memory_summary())
+        memory_summaries.append(vram_peak)
       ntokens_since_last_log = 0
       ntraining_tokens_since_last_log = 0
       time_last_log = time.perf_counter()
