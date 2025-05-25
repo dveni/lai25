@@ -33,7 +33,7 @@ TRAINING_CMD="
 torchrun \
 --nnodes="${SLURM_NNODES}" \
 --node_rank=\$SLURM_NODEID \
---nproc_per_node=4 \
+--nproc_per_node=1 \
 --master_addr="${MASTER_ADDR}" \
 --master_port="${MASTER_PORT}" \
 $ASSIGNMENT_DIR/train.py \

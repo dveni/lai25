@@ -292,7 +292,7 @@ def train(args):
     # Convert args_dict to a serializable format
     args_dict = make_json_serializable(args_dict)
 
-    os.makedirs("/iopsstor/scratch/cscs/$USER/lai25/a2/results", exist_ok=True)
+    os.makedirs("/iopsstor/scratch/cscs/dveranieto/lai25/a2/results", exist_ok=True)
     path = os.path.join("results", name)
     with open(path, "w") as f:
       json.dump(args_dict, f, indent=4)
