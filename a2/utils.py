@@ -50,7 +50,7 @@ def init_distributed():
     # Initialise the process group with NCCL backend (requires Nvidia GPUs)
     dist.init_process_group(backend="nccl")
     
-    print(f"[Distributed Init] Rank {rank} initialized on {node_id} on GPU {local_rank}.")
+    print(f"[Distributed Init] Rank {rank} initialized on node {node_id} on GPU {local_rank}.")
     dist.barrier()
     if rank == 0:
         print(f"[Rank {rank}] All ranks ready!")

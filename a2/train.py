@@ -22,7 +22,7 @@ from transformer_engine.common import recipe
 from torchao.quantization import float8_weight_only, quantize_
 from torchao.float8 import convert_to_float8_training  
 from torchao.prototype.low_bit_optim import AdamW8bit
-
+from torch import nn
 import subprocess
 import itertools
 
@@ -35,6 +35,17 @@ torch.cuda.manual_seed_all(42)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
+
+def apply_compile(model: nn.Module):
+    """
+    Apply torch.compile to each TransformerBlock, which makes compilation efficient due to
+    repeated structure. Alternatively one can compile the whole model (after applying DP).
+    """
+    for layer_id, transformer_block in model.layers.named_children():
+        transformer_block = torch.compile(transformer_block, fullgraph=True)
+        model.layers.register_module(layer_id, transformer_block)
+
+    logger.info("Compiling each TransformerBlock with torch.compile")
 
 def train(args):
   # Init
@@ -122,7 +133,8 @@ def train(args):
   
   if args.compile:
     logger.info("Using `torch.compile`")
-    model = torch.compile(model, fullgraph=True)
+    # model = torch.compile(model, fullgraph=True)
+    apply_compile(model)
   print(torch.cuda.memory_summary())
 
   model.train()
