@@ -34,7 +34,28 @@ for file_path in json_files:
     match = world_size_pattern.search(file_path)
     world_size = int(match.group(1)) if match else "?"
 
-    # Compose label with renamed attributes
+    if world_size == 1:
+        # Skip single GPU runs
+        continue
+
+    # Filtering logic
+    compile_val = data.get("compile", False)
+    include = False
+
+    if compile_val:
+        include = True
+    else:
+        include = (
+            data.get("quantization_torchao", False)
+            and data.get("enable_fsdp_float8_all_gather", False)
+            and data.get("force_recompute_fp8_weight_in_bwd", False)
+            and data.get("quantize_optimizer", False)
+        )
+
+    if not include:
+        continue
+
+    # Compose label
     label_lines = []
     for attr, display in DISPLAY_ATTRS.items():
         value = data.get(attr) if attr != "world_size" else world_size
@@ -55,8 +76,8 @@ plt.figure(figsize=(max(12, len(labels) * 1.2), 8))
 plt.bar(range(len(medians)), medians, color="skyblue")
 plt.ylabel("Median VRAM Usage (GB)")
 plt.xticks(range(len(labels)), labels, rotation=0, ha="center", fontsize=9)
-plt.title("VRAM Usage Across Experiments")
+plt.title("VRAM Usage (Filtered by Compile and TorchAO Settings)")
 plt.tight_layout()
 plt.grid(axis="y", linestyle="--", alpha=0.6)
 
-plt.savefig("vram_usage_plot.png")
+plt.savefig("vram_usage_filtered.png", dpi=300)
