@@ -113,7 +113,7 @@ def train(args):
     # quantize_(model, float8_weight_only())
     config = Float8LinearConfig()
     if args.enable_fsdp_float8_all_gather:
-      config = replace(config, lenable_fsdp_float8_all_gather = True)
+      config = replace(config, enable_fsdp_float8_all_gather = True)
     if args.force_recompute_fp8_weight_in_bwd:
       config = replace(config, force_recompute_fp8_weight_in_bwd = True)
     convert_to_float8_training(model, config=config)
@@ -274,7 +274,9 @@ def train(args):
     args_dict["training_end"] = training_end
     args_dict["training_duration"] = training_end - training_start
     name = f"compile_{args.compile}_quantization_{args.quantization_torchao}_fused_optimizer_{args.fused_optimizer}_quantized_optimizer_{args.quantize_optimizer}_world_size_{world_size}_batch_size_{args.batch_size}_enable_fsdp_float8_all_gather_{args.enable_fsdp_float8_all_gather}_force_recompute_fp8_weight_in_bwd_{args.force_recompute_fp8_weight_in_bwd}.json"
-    with open(name, "w") as f:
+    os.makedirs("results", exist_ok=True)
+    path = os.path.join("results", name)
+    with open(path, "w") as f:
       json.dump(args_dict, f, indent=4)
 
   dist.destroy_process_group()
