@@ -117,6 +117,13 @@ def train(args):
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"\n--> model has {total_params / 1e6} Million params\n")
   
+  if args.compile:
+    logger.info("Using `torch.compile`")
+    # model = torch.compile(model, fullgraph=True)
+    apply_compile(model)
+  print(torch.cuda.memory_summary())
+
+  
   logger.info("Sharding model...")
   for layer in model.layers:
         if isinstance(layer, TransformerBlock):
@@ -131,11 +138,6 @@ def train(args):
 
   print(torch.cuda.memory_summary())
   
-  if args.compile:
-    logger.info("Using `torch.compile`")
-    # model = torch.compile(model, fullgraph=True)
-    apply_compile(model)
-  print(torch.cuda.memory_summary())
 
   model.train()
 
