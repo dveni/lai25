@@ -233,5 +233,11 @@ def get_args():
         action='store_true',
         help="Set to quantize the model with `torchao`"
     )
+    parser.add_argument(
+        "--quantize_optimizer",
+        action='store_true',
+        help="Set to quantize the model with `torchao`"
+    )
+
     args = parser.parse_args()
     return args

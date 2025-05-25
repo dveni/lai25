@@ -57,10 +57,11 @@ $ASSIGNMENT_DIR/train.py \
 --learning-rate 5e-5 \
 --lr-warmup-steps 100 \
 --training-steps 1000 \
---fused-optimizer \
---quantization_torchao
+--quantization_torchao \
 --compile \
+--quantize_optimizer
 "
+# --fused-optimizer \
 
 # srun --cpus-per-task $SLURM_CPUS_PER_TASK bash -c "$CMD_PREFIX $TRAINING_CMD"
 srun bash -c "$TRAINING_CMD"

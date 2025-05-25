@@ -21,6 +21,7 @@ from transformer_engine.common import recipe
 
 from torchao.quantization import float8_weight_only, quantize_
 from torchao.float8 import convert_to_float8_training  
+from torchao.prototype.low_bit_optim import AdamW8bit
 
 import subprocess
 import itertools
@@ -127,7 +128,15 @@ def train(args):
   model.train()
 
   # Build Optimizers & LR Scheduler
-  optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, fused=args.fused_optimizer)
+  if args.quantize_optimizer:
+    logger.info("Quantizing optimizer with torchao...")
+    # Use AdamW8bit from torchao
+    if args.fused_optimizer:
+      raise NotImplementedError("Fused optimizer is not supported with torchao quantization")
+    optimizer = AdamW8bit(model.parameters(), lr=args.learning_rate, fused=args.fused_optimizer)
+  else:
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, fused=args.fused_optimizer)
+
   lr_scheduler = build_lr_scheduler(optimizer, args.lr_warmup_steps)
 
   # Utils
@@ -195,8 +204,8 @@ def train(args):
       tflops = num_flop_per_token * tps / 1e12
       training_tps = ntraining_tokens_since_last_log / time_delta
 
-      logger.info(f"Step: {train_step} | Loss: {loss.item():.2f} | Tokens per second: {tps:.2f} | Training tokens per second (%): {100*training_tps/tps:.2f} | MFU (%): {mfu:.2f} | TFLOPs: {tflops:.2f}")
       if master_process:
+        logger.info(f"Step: {train_step} | Loss: {loss.item():.2f} | Tokens per second: {tps:.2f} | Training tokens per second (%): {100*training_tps/tps:.2f} | MFU (%): {mfu:.2f} | TFLOPs: {tflops:.2f}")
         train_steps.append(train_step)
         losses.append(loss.item())
         tokens_per_second_list.append(tps)
