@@ -28,6 +28,7 @@ from torchao.float8.config import Float8LinearConfig
 from torch import nn
 import subprocess
 import itertools
+from dataclasses import replace
 
 # fix random seed
 torch.manual_seed(42)
@@ -112,9 +113,9 @@ def train(args):
     # quantize_(model, float8_weight_only())
     config = Float8LinearConfig()
     if args.enable_fsdp_float8_all_gather:
-      config.enable_fsdp_float8_all_gather = True
+      config = replace(config, lenable_fsdp_float8_all_gather = True)
     if args.force_recompute_fp8_weight_in_bwd:
-      config.force_recompute_fp8_weight_in_bwd = True
+      config = replace(config, force_recompute_fp8_weight_in_bwd = True)
     convert_to_float8_training(model, config=config)
 
 
