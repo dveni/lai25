@@ -1,5 +1,6 @@
 import os
 import time
+import json
 
 import torch
 from torch.utils.data import DataLoader
@@ -22,6 +23,8 @@ from transformer_engine.common import recipe
 from torchao.quantization import float8_weight_only, quantize_
 from torchao.float8 import convert_to_float8_training  
 from torchao.prototype.low_bit_optim import AdamW8bit
+from torchao.float8.config import Float8LinearConfig
+
 from torch import nn
 import subprocess
 import itertools
@@ -59,7 +62,7 @@ def train(args):
     logger.info(f"Experiment args: {args}")
     logger.info(f"Distributed training with {world_size} processes on device {device}")
   
-  logger.info(f"DDP rank: {ddp_rank}, Local rank: {ddp_local_rank}, World size: {world_size}")
+  logger.info(f"FSDP rank: {ddp_rank}, Local rank: {ddp_local_rank}, World size: {world_size}")
 
   # Set up DataLoader
   logger.info("Setting up DataLoaders...")
@@ -107,7 +110,12 @@ def train(args):
   if args.quantization_torchao:
     logger.info("Quantizing model weights with torchao...")
     # quantize_(model, float8_weight_only())
-    convert_to_float8_training(model)
+    config = Float8LinearConfig()
+    if args.enable_fsdp_float8_all_gather:
+      config.enable_fsdp_float8_all_gather = True
+    if args.force_recompute_fp8_weight_in_bwd:
+      config.force_recompute_fp8_weight_in_bwd = True
+    convert_to_float8_training(model, config=config)
 
 
 
@@ -123,7 +131,7 @@ def train(args):
     apply_compile(model)
   print(torch.cuda.memory_summary())
 
-  
+
   logger.info("Sharding model...")
   for layer in model.layers:
         if isinstance(layer, TransformerBlock):
@@ -173,6 +181,8 @@ def train(args):
   mfus = []
   tflops_list = []
   memory_summaries = []
+
+  training_start = time.perf_counter()
   for i, (input_ids, labels) in enumerate(train_dl):
     train_step += 1
     if train_step > args.training_steps:
@@ -214,7 +224,7 @@ def train(args):
       time_delta = time.perf_counter() - time_last_log
       # tokens per second per device, abbreviated as tps
       tps = ntokens_since_last_log / time_delta 
-      mfu = 100 * num_flop_per_token * tps / 989e12
+      mfu = 100 * num_flop_per_token * tps / 989e12 / world_size 
       tflops = num_flop_per_token * tps / 1e12
       training_tps = ntraining_tokens_since_last_log / time_delta
 
@@ -235,21 +245,36 @@ def train(args):
     if args.profile and args.profile_step_end == train_step:
       torch.cuda.cudart().cudaProfilerStop()
 
-
+  training_end = time.perf_counter()
   logger.info("Training completed")
   if master_process:
     # Save lists
-    import numpy as np
-    np.savez("train_steps.npz", train_steps=np.array(train_steps))
-    np.savez("losses.npz", losses=np.array(losses))
-    np.savez("tokens_per_second.npz", tokens_per_second=np.array(tokens_per_second_list))
-    np.savez("training_tokens_per_second.npz", training_tokens_per_second=np.array(training_tokens_per_second_list))
-    np.savez("mfus.npz", mfus=np.array(mfus))
-    np.savez("tflops.npz", tflops=np.array(tflops_list))
-    with open("memory_summaries.txt", "w") as f:
-      for memory_summary in memory_summaries:
-        f.write(memory_summary + "\n\n")
+    # import numpy as np
+    # np.savez("train_steps.npz", train_steps=np.array(train_steps))
+    # np.savez("losses.npz", losses=np.array(losses))
+    # np.savez("tokens_per_second.npz", tokens_per_second=np.array(tokens_per_second_list))
+    # np.savez("training_tokens_per_second.npz", training_tokens_per_second=np.array(training_tokens_per_second_list))
+    # np.savez("mfus.npz", mfus=np.array(mfus))
+    # np.savez("tflops.npz", tflops=np.array(tflops_list))
+    # with open("memory_summaries.txt", "w") as f:
+    #   for memory_summary in memory_summaries:
+    #     f.write(memory_summary + "\n\n")
 
+    # Save arguments in a json dict
+    args_dict = vars(args)
+    args_dict["train_steps"] = train_steps
+    args_dict["losses"] = losses
+    args_dict["tokens_per_second"] = tokens_per_second_list
+    args_dict["training_tokens_per_second"] = training_tokens_per_second_list
+    args_dict["mfus"] = mfus
+    args_dict["tflops"] = tflops_list
+    args_dict["memory_summaries"] = memory_summaries
+    args_dict["training_start"] = training_start
+    args_dict["training_end"] = training_end
+    args_dict["training_duration"] = training_end - training_start
+    name = f"compile_{args.compile}_quantization_{args.quantization_torchao}_fused_optimizer_{args.fused_optimizer}_quantized_optimizer_{args.quantize_optimizer}_world_size_{world_size}_batch_size_{args.batch_size}_enable_fsdp_float8_all_gather_{args.enable_fsdp_float8_all_gather}_force_recompute_fp8_weight_in_bwd_{args.force_recompute_fp8_weight_in_bwd}.json"
+    with open(name, "w") as f:
+      json.dump(args_dict, f, indent=4)
 
   dist.destroy_process_group()
 

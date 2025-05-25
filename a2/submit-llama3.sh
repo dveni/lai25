@@ -59,7 +59,9 @@ $ASSIGNMENT_DIR/train.py \
 --training-steps 1000 \
 --quantization_torchao \
 --compile \
---quantize_optimizer
+--quantize_optimizer \ 
+--enable_fsdp_float8_all_gather \
+--force_recompute_fp8_weight_in_bwd \
 "
 # --fused-optimizer \
 

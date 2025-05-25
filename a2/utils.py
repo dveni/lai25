@@ -234,9 +234,19 @@ def get_args():
         help="Set to quantize the model with `torchao`"
     )
     parser.add_argument(
+        "--enable_fsdp_float8_all_gather",
+        action='store_true',
+        help="cast Float8Linear.weight from high precision to float8 before FSDP all-gather so we can communicate in float8 to save bandwidth."
+    )
+    parser.add_argument(
+        "--force_recompute_fp8_weight_in_bwd",
+        action='store_true',
+        help=" force recomputation of fp8 weights during backward pass, preventing unsharded fp8 weights from being saved for backward."
+    )
+    parser.add_argument(
         "--quantize_optimizer",
         action='store_true',
-        help="Set to quantize the model with `torchao`"
+        help="Set to quantize the optimizer with `torchao`"
     )
 
     args = parser.parse_args()
