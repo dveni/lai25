@@ -5,7 +5,7 @@
 #SBATCH --time=00:14:59
 #SBATCH --job-name=lsai
 #SBATCH --output=logs/%x-%j.out
-#SBATCH --nodes=4
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
 #SBATCH --environment=myenv #/iopsstor/scratch/cscs/dveranieto/ngc_pt_jan.toml     # Vanilla 25.01 PyTorch NGC Image 
@@ -47,6 +47,7 @@ $ASSIGNMENT_DIR/train.py \
 --quantize_optimizer \
 --enable_fsdp_float8_all_gather \
 --force_recompute_fp8_weight_in_bwd \
+--training-steps=20
 "
 # --fused-optimizer \
 
