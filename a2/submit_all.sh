@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directory containing generated batch scripts
-JOB_DIR="generated_jobs"
+JOB_DIR="generated_jobs_niklas"
 
 # Your username (can also be detected automatically)
 USER_NAME=$(whoami)

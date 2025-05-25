@@ -49,10 +49,11 @@ srun bash -c "$TRAINING_CMD"
 echo "END TIME: $(date)"
 """
 
-os.makedirs("generated_jobs", exist_ok=True)
+os.makedirs("generated_jobs_niklas", exist_ok=True)
 
 # (nodes, gpus_per_node) combinations
-gpu_configs = [(1, 4), (2, 4), (3, 4), (4, 4)]
+gpu_configs = [(4, 4)]
+# gpu_configs = [(1, 4), (2, 4), (3, 4), (4, 4)]
 # gpu_configs = [(1, 1), (1, 4), (2, 4), (3, 4), (4, 4)]
 
 torchao_options = [True, False]
@@ -82,7 +83,7 @@ for (nodes, gpus), torchao, compile in product(gpu_configs, torchao_options, com
                 nproc_per_node=nproc,
                 extra_flags=" \\\n".join(flags)
             )
-            with open(f"generated_jobs/{jobname}", "w") as f:
+            with open(f"generated_jobs_niklas/{jobname}", "w") as f:
                 f.write(full_script)
 
     else:
@@ -103,5 +104,5 @@ for (nodes, gpus), torchao, compile in product(gpu_configs, torchao_options, com
                 nproc_per_node=nproc,
                 extra_flags=" \\\n".join(flags)
             )
-            with open(f"generated_jobs/{jobname}", "w") as f:
+            with open(f"generated_jobs_niklas/{jobname}", "w") as f:
                 f.write(full_script)
