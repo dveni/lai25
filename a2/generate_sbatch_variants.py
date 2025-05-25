@@ -10,7 +10,7 @@ base_script = """#!/bin/bash
 #SBATCH --output=logs/%x-%j.out
 #SBATCH --nodes={nodes}
 #SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=4
+#SBATCH --gpus-per-node={gpus}
 #SBATCH --environment=myenv
 #SBATCH --no-requeue
 
@@ -32,7 +32,7 @@ TRAINING_CMD="
 torchrun \\
 --nnodes=$SLURM_NNODES \\
 --node_rank=$SLURM_NODEID \\
---nproc_per_node=4 \\
+--nproc_per_node={nproc_per_node} \\
 --master_addr=$MASTER_ADDR \\
 --master_port=$MASTER_PORT \\
 $ASSIGNMENT_DIR/train.py \\
@@ -51,14 +51,15 @@ echo "END TIME: $(date)"
 
 os.makedirs("generated_jobs", exist_ok=True)
 
-# Define possible combinations
-nodes_options = [1, 2, 3, 4]
+# (nodes, gpus_per_node) combinations
+gpu_configs = [(1, 1), (1, 4), (2, 4), (3, 4), (4, 4)]
+
 torchao_options = [True, False]
 compile_options = [True, False]
 
-for nodes, torchao, compile in product(nodes_options, torchao_options, compile_options):
+for (nodes, gpus), torchao, compile in product(gpu_configs, torchao_options, compile_options):
+    nproc = gpus  # same number of processes as GPUs per node
     if torchao:
-        # torchao-specific options
         for allgather, fp8recompute, quant_opt in product([True, False], repeat=3):
             flags = ["--quantization_torchao"]
             if allgather:
@@ -70,16 +71,20 @@ for nodes, torchao, compile in product(nodes_options, torchao_options, compile_o
             if compile:
                 flags.append("--compile")
 
-            jobname = f"sbatch_nodes{nodes}_torchao_ag{int(allgather)}_fp8{int(fp8recompute)}_qopt{int(quant_opt)}_compile{int(compile)}.sh"
+            jobname = (
+                f"sbatch_nodes{nodes}_gpus{gpus}_"
+                f"torchao_ag{int(allgather)}_fp8{int(fp8recompute)}_qopt{int(quant_opt)}_compile{int(compile)}.sh"
+            )
             full_script = base_script.format(
                 nodes=nodes,
+                gpus=gpus,
+                nproc_per_node=nproc,
                 extra_flags=" \\\n".join(flags)
             )
             with open(f"generated_jobs/{jobname}", "w") as f:
                 f.write(full_script)
 
     else:
-        # non-torchao → fused optimizer option
         for fused_opt in [True, False]:
             flags = []
             if fused_opt:
@@ -87,9 +92,14 @@ for nodes, torchao, compile in product(nodes_options, torchao_options, compile_o
             if compile:
                 flags.append("--compile")
 
-            jobname = f"sbatch_nodes{nodes}_notorchao_fopt{int(fused_opt)}_compile{int(compile)}.sh"
+            jobname = (
+                f"sbatch_nodes{nodes}_gpus{gpus}_"
+                f"notorchao_fopt{int(fused_opt)}_compile{int(compile)}.sh"
+            )
             full_script = base_script.format(
                 nodes=nodes,
+                gpus=gpus,
+                nproc_per_node=nproc,
                 extra_flags=" \\\n".join(flags)
             )
             with open(f"generated_jobs/{jobname}", "w") as f:
