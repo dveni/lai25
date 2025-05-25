@@ -2,7 +2,7 @@
 
 #SBATCH --account=a-large-sc
 #SBATCH --partition=normal
-#SBATCH --time=00:14:59
+#SBATCH --time=00:59:59
 #SBATCH --job-name=lsai
 #SBATCH --output=logs/%x-%j.out
 #SBATCH --nodes=1
@@ -33,7 +33,7 @@ TRAINING_CMD="
 torchrun \
 --nnodes="${SLURM_NNODES}" \
 --node_rank=\$SLURM_NODEID \
---nproc_per_node=1 \
+--nproc_per_node=4 \
 --master_addr="${MASTER_ADDR}" \
 --master_port="${MASTER_PORT}" \
 $ASSIGNMENT_DIR/train.py \
